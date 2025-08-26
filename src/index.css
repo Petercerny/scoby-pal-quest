@@ -1,0 +1,186 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  :root {
+    /* Kombucha-inspired warm palette */
+    --background: 32 20% 98%;
+    --foreground: 25 25% 15%;
+
+    --card: 30 25% 96%;
+    --card-foreground: 25 25% 15%;
+
+    --popover: 30 25% 96%;
+    --popover-foreground: 25 25% 15%;
+
+    /* Warm amber primary (kombucha color) */
+    --primary: 35 65% 45%;
+    --primary-foreground: 30 25% 96%;
+    --primary-glow: 38 70% 55%;
+
+    /* Soft tea green secondary */
+    --secondary: 75 35% 85%;
+    --secondary-foreground: 25 25% 15%;
+    --secondary-accent: 75 45% 65%;
+
+    /* Muted earth tones */
+    --muted: 30 15% 90%;
+    --muted-foreground: 25 15% 45%;
+
+    /* Health/success green accent */
+    --accent: 120 40% 60%;
+    --accent-foreground: 30 25% 96%;
+
+    /* Warning amber */
+    --destructive: 15 85% 55%;
+    --destructive-foreground: 30 25% 96%;
+
+    --border: 30 20% 88%;
+    --input: 30 20% 92%;
+    --ring: 35 65% 45%;
+
+    /* Custom kombucha theme colors */
+    --scoby-healthy: 120 40% 60%;
+    --scoby-warning: 45 85% 60%;  
+    --scoby-danger: 15 85% 55%;
+    
+    --quest-complete: 120 50% 50%;
+    --quest-pending: 200 40% 60%;
+    
+    /* Gradients */
+    --gradient-warm: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-health: linear-gradient(135deg, hsl(var(--scoby-healthy)), hsl(120 50% 70%));
+    --gradient-card: linear-gradient(145deg, hsl(var(--card)), hsl(30 30% 94%));
+    
+    /* Shadows */
+    --shadow-warm: 0 4px 20px -4px hsl(var(--primary) / 0.15);
+    --shadow-soft: 0 2px 10px -2px hsl(25 25% 15% / 0.08);
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --bounce-gentle: cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    --health-pulse: cubic-bezier(0.4, 0, 0.6, 1);
+
+    --radius: 0.5rem;
+
+    --sidebar-background: 0 0% 98%;
+
+    --sidebar-foreground: 240 5.3% 26.1%;
+
+    --sidebar-primary: 240 5.9% 10%;
+
+    --sidebar-primary-foreground: 0 0% 98%;
+
+    --sidebar-accent: 240 4.8% 95.9%;
+
+    --sidebar-accent-foreground: 240 5.9% 10%;
+
+    --sidebar-border: 220 13% 91%;
+
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  .dark {
+    /* Dark kombucha theme */
+    --background: 25 25% 8%;
+    --foreground: 30 25% 95%;
+
+    --card: 25 20% 12%;
+    --card-foreground: 30 25% 95%;
+
+    --popover: 25 20% 12%;
+    --popover-foreground: 30 25% 95%;
+
+    /* Warmer amber primary for dark mode */
+    --primary: 38 70% 55%;
+    --primary-foreground: 25 25% 8%;
+    --primary-glow: 42 75% 65%;
+
+    /* Darker tea green secondary */
+    --secondary: 75 20% 20%;
+    --secondary-foreground: 30 25% 95%;
+    --secondary-accent: 75 35% 40%;
+
+    /* Dark muted tones */
+    --muted: 25 15% 15%;
+    --muted-foreground: 30 10% 65%;
+
+    /* Consistent accent colors */
+    --accent: 120 35% 55%;
+    --accent-foreground: 25 25% 8%;
+
+    --destructive: 15 80% 50%;
+    --destructive-foreground: 30 25% 95%;
+
+    --border: 25 15% 18%;
+    --input: 25 15% 18%;
+    --ring: 38 70% 55%;
+
+    /* Dark theme custom colors */
+    --scoby-healthy: 120 35% 55%;
+    --scoby-warning: 45 80% 55%;  
+    --scoby-danger: 15 80% 50%;
+    
+    --quest-complete: 120 40% 50%;
+    --quest-pending: 200 35% 55%;
+    
+    /* Dark gradients */
+    --gradient-warm: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary-glow)));
+    --gradient-health: linear-gradient(135deg, hsl(var(--scoby-healthy)), hsl(120 40% 65%));
+    --gradient-card: linear-gradient(145deg, hsl(var(--card)), hsl(25 25% 10%));
+    
+    /* Dark shadows */
+    --shadow-warm: 0 4px 20px -4px hsl(var(--primary) / 0.25);
+    --shadow-soft: 0 2px 10px -2px hsl(0 0% 0% / 0.3);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  /* Health animations */
+  .health-pulse {
+    animation: healthPulse 0.6s var(--health-pulse);
+  }
+  
+  .health-bounce {
+    animation: healthBounce 0.8s var(--bounce-gentle);
+  }
+  
+  .health-glow {
+    animation: healthGlow 2s ease-in-out infinite alternate;
+  }
+}
+
+@layer utilities {
+  /* Health-specific keyframes */
+  @keyframes healthPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+  }
+  
+  @keyframes healthBounce {
+    0%, 20%, 53%, 80%, 100% { transform: translateY(0); }
+    40%, 43% { transform: translateY(-8px); }
+    70% { transform: translateY(-4px); }
+    90% { transform: translateY(-2px); }
+  }
+  
+  @keyframes healthGlow {
+    0% { box-shadow: 0 0 5px hsl(var(--scoby-healthy) / 0.3); }
+    100% { box-shadow: 0 0 20px hsl(var(--scoby-healthy) / 0.6); }
+  }
+}
