@@ -20,6 +20,7 @@ export const BatchesPage = () => {
   const { 
     batches, 
     createBatch, 
+    updateBatch,
     updateBatchStatus, 
     archiveBatch, 
     deleteBatch,
@@ -44,11 +45,11 @@ export const BatchesPage = () => {
 
   const handleUpdateBatch = (formData: BatchFormData) => {
     if (editingBatch) {
-      // For now, we'll just update the basic info
-      // In a real app, you'd want to update the batch in the database
+      // Update the batch with the new form data
+      updateBatch(editingBatch.id, formData);
       toast({
         title: "Batch updated! ✏️",
-        description: `${editingBatch.name} has been updated.`,
+        description: `${formData.name} has been updated.`,
       });
       setEditingBatch(undefined);
     }

@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { X } from 'lucide-react';
 import { Batch, BatchFormData } from '@/types/batch';
+import { useSettings } from '@/hooks/useSettings';
 
 interface BatchFormProps {
   isOpen: boolean;
@@ -26,8 +27,6 @@ const TEA_TYPES = [
   'Custom Blend'
 ];
 
-const DEFAULT_TARGET_DAYS = 7;
-
 export const BatchForm = ({ 
   isOpen, 
   onClose, 
@@ -35,14 +34,16 @@ export const BatchForm = ({
   batch, 
   title = 'New Batch' 
 }: BatchFormProps) => {
+  const { getBrewingDefaults } = useSettings();
+  
   const [formData, setFormData] = useState<BatchFormData>({
     name: '',
     teaType: 'Black Tea',
     notes: '',
-    targetDays: DEFAULT_TARGET_DAYS,
+    targetDays: 7,
   });
 
-  const [errors, setErrors] = useState<Partial<BatchFormData>>({});
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (batch) {
@@ -53,18 +54,20 @@ export const BatchForm = ({
         targetDays: batch.targetDays,
       });
     } else {
+      // Only set defaults when opening a new batch form (not editing)
+      const defaults = getBrewingDefaults();
       setFormData({
         name: '',
-        teaType: 'Black Tea',
+        teaType: defaults.defaultTeaType,
         notes: '',
-        targetDays: DEFAULT_TARGET_DAYS,
+        targetDays: defaults.defaultTargetDays,
       });
     }
     setErrors({});
-  }, [batch, isOpen]);
+  }, [batch, isOpen, getBrewingDefaults]);
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<BatchFormData> = {};
+    const newErrors: Record<string, string> = {};
 
     if (!formData.name.trim()) {
       newErrors.name = 'Batch name is required';

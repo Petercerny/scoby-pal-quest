@@ -139,6 +139,21 @@ export const useBatches = () => {
     );
   }, []);
 
+  // Update batch details (name, tea type, notes, target days)
+  const updateBatch = useCallback((batchId: string, updates: Partial<BatchFormData>) => {
+    setBatches(prev => 
+      prev.map(batch => 
+        batch.id === batchId 
+          ? { 
+              ...batch, 
+              ...updates, 
+              updatedAt: new Date() 
+            }
+          : batch
+      )
+    );
+  }, []);
+
   // Archive a batch
   const archiveBatch = useCallback((batchId: string) => {
     setBatches(prev => 
@@ -202,6 +217,7 @@ export const useBatches = () => {
     batches,
     isLoading,
     createBatch,
+    updateBatch,
     updateBatchStatus,
     archiveBatch,
     deleteBatch,

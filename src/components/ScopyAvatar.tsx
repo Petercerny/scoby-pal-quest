@@ -52,6 +52,20 @@ export const ScopyAvatar = ({
     return 'shadow-scoby-danger/25';
   };
 
+  // Calculate opacity based on health - higher health = more visible image
+  const getHealthOpacity = () => {
+    // At 100% health: opacity = 1.0 (fully visible)
+    // At 0% health: opacity = 0.3 (very faded)
+    return 0.3 + (health / 100) * 0.7;
+  };
+
+  // Calculate image scale based on health - higher health = larger image
+  const getHealthScale = () => {
+    // At 100% health: scale = 1.0 (full size)
+    // At 0% health: scale = 0.7 (smaller)
+    return 0.7 + (health / 100) * 0.3;
+  };
+
   return (
     <div className="relative">
       <div 
@@ -60,7 +74,7 @@ export const ScopyAvatar = ({
           ${getMoodColor()} 
           ${getHealthGlow()}
           ${isFloating ? 'animate-float' : ''}
-          relative rounded-full p-2 transition-all duration-500
+          relative rounded-full p-2 transition-all duration-10
         `}
         style={{ 
           filter: `brightness(${0.8 + (health / 500)}) saturate(${0.7 + (health / 300)})` 
@@ -69,18 +83,22 @@ export const ScopyAvatar = ({
         <img 
           src={scobyImage} 
           alt="Your SCOBY companion" 
-          className="w-full h-full object-contain rounded-full"
+          className="w-full h-full object-contain rounded-full transition-all duration-500"
+          style={{
+            opacity: getHealthOpacity(),
+            transform: `scale(${getHealthScale()})`,
+          }}
         />
         
-        {/* Health indicator ring */}
+        {/* Health indicator ring - now shows the opposite of what it used to */}
         <div className="absolute inset-0 rounded-full border-2 border-transparent bg-gradient-to-r from-transparent via-transparent to-transparent">
           <div 
             className="absolute inset-0 rounded-full border-2 border-scoby-healthy transition-all duration-700"
             style={{
               background: `conic-gradient(
                 hsl(var(--scoby-healthy)) 0deg, 
-                hsl(var(--scoby-healthy)) ${health * 3.6}deg, 
-                transparent ${health * 3.6}deg, 
+                hsl(var(--scoby-healthy)) ${(100 - health) * 3.6}deg, 
+                transparent ${(100 - health) * 3.6}deg, 
                 transparent 360deg
               )`
             }}

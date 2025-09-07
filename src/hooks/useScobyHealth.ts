@@ -4,7 +4,7 @@ import { Batch } from '@/types/batch';
 
 export interface HealthEvent {
   id: string;
-  type: 'BATCH_SUCCESS' | 'BATCH_FAILURE' | 'QUEST_COMPLETE' | 'TIME_DECAY' | 'BATCH_OVERDUE';
+  type: 'BATCH_SUCCESS' | 'BATCH_FAILURE' | 'QUEST_COMPLETE' | 'TIME_DECAY' | 'BATCH_OVERDUE' | 'DAILY_CARE';
   value: number; // Health change amount
   timestamp: Date;
   description: string;
@@ -65,7 +65,7 @@ export const useScobyHealth = () => {
   }, [health]);
 
   // Calculate health based on batch performance
-  const calculateBatchHealth = useCallback((batches: Batch[]): number => {
+  const calculateBatchHealth = useCallback((batches: Batch[]): { healthChange: number; events: HealthEvent[] } => {
     let healthChange = 0;
     const events: HealthEvent[] = [];
 
@@ -249,6 +249,13 @@ export const useScobyHealth = () => {
     getHealthTrend,
   };
 };
+
+
+
+
+
+
+
 
 
 
