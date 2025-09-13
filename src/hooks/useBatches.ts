@@ -1,6 +1,6 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { differenceInDays, addDays, isAfter, isBefore, startOfDay } from 'date-fns';
-import { Batch, BatchFormData, BatchStats } from '@/types/batch';
+import { Batch, BatchFormData, BatchStats, F2Flavoring } from '@/types/batch';
 
 // Sample demo batches for testing
 const DEMO_BATCHES: Omit<Batch, 'id' | 'currentDay' | 'createdAt' | 'updatedAt'>[] = [
@@ -31,16 +31,44 @@ const DEMO_BATCHES: Omit<Batch, 'id' | 'currentDay' | 'createdAt' | 'updatedAt'>
     targetDays: 7,
     isActive: true,
   },
+  {
+    name: 'Strawberry Ginger Fizz',
+    startDate: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000), // 12 days ago
+    status: 'f2_brewing',
+    teaType: 'Black Tea',
+    notes: 'F1 completed, now adding strawberry and ginger for F2',
+    targetDays: 7,
+    f2StartDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
+    f2TargetDays: 3,
+    f2CurrentDay: 2,
+    f2Flavorings: [
+      { id: '1', name: 'Fresh Strawberries', type: 'fruit', amount: '1 cup', notes: 'Diced' },
+      { id: '2', name: 'Fresh Ginger', type: 'spice', amount: '2 tbsp', notes: 'Grated' }
+    ],
+    isActive: true,
+  },
 ];
 
 export const useBatches = () => {
   const [batches, setBatches] = useState<Batch[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // Use ref to track previous batches state to avoid unnecessary saves
+  const prevBatchesRef = useRef<Batch[] | null>(null);
+  const isInitializedRef = useRef(false);
 
   // Calculate current brewing day for a batch
   const calculateCurrentDay = useCallback((startDate: Date): number => {
     const today = startOfDay(new Date());
     const start = startOfDay(startDate);
+    const days = differenceInDays(today, start);
+    return Math.max(0, days + 1); // +1 because day 1 is the start date
+  }, []);
+
+  // Calculate current F2 brewing day for a batch
+  const calculateF2CurrentDay = useCallback((f2StartDate: Date): number => {
+    const today = startOfDay(new Date());
+    const start = startOfDay(f2StartDate);
     const days = differenceInDays(today, start);
     return Math.max(0, days + 1); // +1 because day 1 is the start date
   }, []);
@@ -53,10 +81,12 @@ export const useBatches = () => {
         const parsedBatches = JSON.parse(savedBatches).map((batch: any) => ({
           ...batch,
           startDate: new Date(batch.startDate),
+          f2StartDate: batch.f2StartDate ? new Date(batch.f2StartDate) : undefined,
           createdAt: new Date(batch.createdAt),
           updatedAt: new Date(batch.updatedAt),
         }));
         setBatches(parsedBatches);
+        prevBatchesRef.current = parsedBatches;
       } catch (error) {
         console.error('Error loading batches:', error);
       }
@@ -66,16 +96,69 @@ export const useBatches = () => {
         ...demo,
         id: `demo-batch-${index}`,
         currentDay: calculateCurrentDay(demo.startDate),
+        f2CurrentDay: demo.f2StartDate ? calculateF2CurrentDay(demo.f2StartDate) : undefined,
         createdAt: demo.startDate,
         updatedAt: new Date(),
       }));
       setBatches(demoBatches);
+      prevBatchesRef.current = demoBatches;
     }
+    isInitializedRef.current = true;
   }, [calculateCurrentDay]);
 
-  // Save batches to localStorage whenever batches change
+  // Save batches to localStorage only when there are meaningful changes
   useEffect(() => {
-    localStorage.setItem('scoby-batches', JSON.stringify(batches));
+    if (!isInitializedRef.current) return;
+    
+    const prevBatches = prevBatchesRef.current;
+    if (!prevBatches) {
+      prevBatchesRef.current = batches;
+      return;
+    }
+
+    // Only save if there are meaningful changes
+    const hasLengthChange = prevBatches.length !== batches.length;
+    const hasContentChange = batches.some((batch, index) => {
+      const prevBatch = prevBatches[index];
+      if (!prevBatch) return true;
+      return (
+        batch.currentDay !== prevBatch.currentDay ||
+        batch.status !== prevBatch.status ||
+        batch.updatedAt.getTime() !== prevBatch.updatedAt.getTime() ||
+        batch.f2CurrentDay !== prevBatch.f2CurrentDay
+      );
+    });
+
+    if (hasLengthChange || hasContentChange) {
+      try {
+        localStorage.setItem('scoby-batches', JSON.stringify(batches));
+        prevBatchesRef.current = batches;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+          console.error('localStorage quota exceeded. Clearing old batches...');
+          // Keep only active batches and recent archived ones
+          const recentBatches = batches.filter(batch => 
+            batch.isActive || 
+            (batch.status === 'archived' && 
+             differenceInDays(new Date(), batch.updatedAt) <= 30)
+          );
+          try {
+            localStorage.setItem('scoby-batches', JSON.stringify(recentBatches));
+            setBatches(recentBatches);
+            prevBatchesRef.current = recentBatches;
+          } catch (retryError) {
+            console.error('Failed to save even after trimming batches:', retryError);
+            // Keep only active batches as last resort
+            const activeBatches = batches.filter(batch => batch.isActive);
+            localStorage.setItem('scoby-batches', JSON.stringify(activeBatches));
+            setBatches(activeBatches);
+            prevBatchesRef.current = activeBatches;
+          }
+        } else {
+          console.error('Error saving batches data:', error);
+        }
+      }
+    }
   }, [batches]);
 
 
@@ -86,10 +169,11 @@ export const useBatches = () => {
       prevBatches.map(batch => ({
         ...batch,
         currentDay: calculateCurrentDay(batch.startDate),
+        f2CurrentDay: batch.f2StartDate ? calculateF2CurrentDay(batch.f2StartDate) : undefined,
         updatedAt: new Date(),
       }))
     );
-  }, [calculateCurrentDay]);
+  }, [calculateCurrentDay, calculateF2CurrentDay]);
 
   // Update batch days every day at midnight
   useEffect(() => {
@@ -122,6 +206,8 @@ export const useBatches = () => {
       isActive: true,
       createdAt: now,
       updatedAt: now,
+      f2TargetDays: formData.f2TargetDays,
+      f2Flavorings: formData.f2Flavorings || [],
     };
 
     setBatches(prev => [...prev, newBatch]);
@@ -134,6 +220,26 @@ export const useBatches = () => {
       prev.map(batch => 
         batch.id === batchId 
           ? { ...batch, status, updatedAt: new Date() }
+          : batch
+      )
+    );
+  }, []);
+
+  // Start F2 fermentation
+  const startF2Fermentation = useCallback((batchId: string, f2TargetDays: number, f2Flavorings: F2Flavoring[]) => {
+    const now = new Date();
+    setBatches(prev => 
+      prev.map(batch => 
+        batch.id === batchId 
+          ? { 
+              ...batch, 
+              status: 'f2_brewing',
+              f2StartDate: now,
+              f2TargetDays,
+              f2Flavorings,
+              f2CurrentDay: 1,
+              updatedAt: now 
+            }
           : batch
       )
     );
@@ -219,6 +325,7 @@ export const useBatches = () => {
     createBatch,
     updateBatch,
     updateBatchStatus,
+    startF2Fermentation,
     archiveBatch,
     deleteBatch,
     getBatchStats,

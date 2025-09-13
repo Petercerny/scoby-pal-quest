@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Dashboard } from "@/components/Dashboard";
 import { BatchesPage } from "@/components/BatchesPage";
 import { Settings } from "@/components/Settings";
+import { LibraryPage } from "@/components/LibraryPage";
 import { BottomNav } from "@/components/BottomNav";
 
 const Index = () => {
@@ -23,14 +24,7 @@ const Index = () => {
           </div>
         );
       case 'library':
-        return (
-          <div className="min-h-screen bg-background p-4 pb-24">
-            <div className="text-center pt-20">
-              <h1 className="text-2xl font-bold mb-4">Troubleshooting Library</h1>
-              <p className="text-muted-foreground">Coming soon...</p>
-            </div>
-          </div>
-        );
+        return <LibraryPage />;
       case 'settings':
         return <Settings />;
       default:

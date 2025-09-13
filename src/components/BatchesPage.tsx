@@ -7,6 +7,7 @@ import { Plus, Filter, Search } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { BatchCard } from './BatchCard';
 import { BatchForm } from './BatchForm';
+import { F2StartForm } from './F2StartForm';
 import { useBatches } from '@/hooks/useBatches';
 import { Batch, BatchFormData } from '@/types/batch';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +15,8 @@ import { useToast } from '@/hooks/use-toast';
 export const BatchesPage = () => {
   const [showForm, setShowForm] = useState(false);
   const [editingBatch, setEditingBatch] = useState<Batch | undefined>();
+  const [showF2Form, setShowF2Form] = useState(false);
+  const [f2Batch, setF2Batch] = useState<Batch | undefined>();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
   
@@ -21,7 +24,8 @@ export const BatchesPage = () => {
     batches, 
     createBatch, 
     updateBatch,
-    updateBatchStatus, 
+    updateBatchStatus,
+    startF2Fermentation, 
     archiveBatch, 
     deleteBatch,
     getBatchStats 
@@ -88,12 +92,34 @@ export const BatchesPage = () => {
     }
   };
 
+  const handleStartF2 = (batch: Batch) => {
+    setF2Batch(batch);
+    setShowF2Form(true);
+  };
+
+  const handleF2Start = (f2TargetDays: number, f2Flavorings: any[]) => {
+    if (f2Batch) {
+      startF2Fermentation(f2Batch.id, f2TargetDays, f2Flavorings);
+      toast({
+        title: "F2 Fermentation started! 🧪",
+        description: `${f2Batch.name} is now in secondary fermentation with ${f2Flavorings.length} flavoring(s).`,
+      });
+    }
+  };
+
   const filteredBatches = batches.filter(batch => {
     const matchesSearch = batch.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          batch.teaType.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (batch.notes && batch.notes.toLowerCase().includes(searchTerm.toLowerCase()));
     
-    const matchesTab = activeTab === 'all' || batch.status === activeTab;
+    let matchesTab = false;
+    if (activeTab === 'all') {
+      matchesTab = true;
+    } else if (activeTab === 'ready') {
+      matchesTab = batch.status === 'ready' || batch.status === 'f2_ready';
+    } else {
+      matchesTab = batch.status === activeTab;
+    }
     
     return matchesSearch && matchesTab;
   });
@@ -166,10 +192,11 @@ export const BatchesPage = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-6">
             <TabsTrigger value="all">All ({getTabCount('all')})</TabsTrigger>
-            <TabsTrigger value="brewing">Brewing ({getTabCount('brewing')})</TabsTrigger>
-            <TabsTrigger value="ready">Ready ({getTabCount('ready')})</TabsTrigger>
+            <TabsTrigger value="brewing">F1 ({getTabCount('brewing')})</TabsTrigger>
+            <TabsTrigger value="f2_brewing">F2 ({getTabCount('f2_brewing')})</TabsTrigger>
+            <TabsTrigger value="ready">Ready ({getTabCount('ready') + getTabCount('f2_ready')})</TabsTrigger>
             <TabsTrigger value="bottled">Bottled ({getTabCount('bottled')})</TabsTrigger>
             <TabsTrigger value="archived">Archived ({getTabCount('archived')})</TabsTrigger>
           </TabsList>
@@ -197,6 +224,7 @@ export const BatchesPage = () => {
                     onArchive={handleArchive}
                     onDelete={handleDelete}
                     onEdit={handleEditBatch}
+                    onStartF2={handleStartF2}
                   />
                 ))}
               </div>
@@ -216,6 +244,19 @@ export const BatchesPage = () => {
         batch={editingBatch}
         title={editingBatch ? 'Edit Batch' : 'New Batch'}
       />
+
+      {/* F2 Start Form Modal */}
+      {f2Batch && (
+        <F2StartForm
+          isOpen={showF2Form}
+          onClose={() => {
+            setShowF2Form(false);
+            setF2Batch(undefined);
+          }}
+          onSubmit={handleF2Start}
+          batch={f2Batch}
+        />
+      )}
     </div>
   );
 };
