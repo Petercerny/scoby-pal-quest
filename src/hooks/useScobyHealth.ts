@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { differenceInDays, startOfDay } from 'date-fns';
 import { Batch } from '@/types/batch';
 
@@ -39,72 +39,140 @@ export const useScobyHealth = () => {
     lastUpdated: new Date(),
   });
 
+  // Use ref to track previous health state to avoid unnecessary saves
+  const prevHealthRef = useRef<ScobyHealth | null>(null);
+  const isInitializedRef = useRef(false);
+
   // Load health from localStorage on mount
   useEffect(() => {
     const savedHealth = localStorage.getItem('scoby-health');
     if (savedHealth) {
       try {
         const parsedHealth = JSON.parse(savedHealth);
-        setHealth({
+        const loadedHealth = {
           ...parsedHealth,
           lastUpdated: new Date(parsedHealth.lastUpdated),
           healthEvents: parsedHealth.healthEvents.map((event: any) => ({
             ...event,
             timestamp: new Date(event.timestamp),
           })),
-        });
+        };
+        setHealth(loadedHealth);
+        prevHealthRef.current = loadedHealth;
       } catch (error) {
         console.error('Error loading health data:', error);
       }
     }
+    isInitializedRef.current = true;
   }, []);
 
-  // Save health to localStorage whenever it changes
+  // Save health to localStorage only when there are meaningful changes
   useEffect(() => {
-    localStorage.setItem('scoby-health', JSON.stringify(health));
+    if (!isInitializedRef.current) return;
+    
+    const prevHealth = prevHealthRef.current;
+    if (!prevHealth) {
+      prevHealthRef.current = health;
+      return;
+    }
+
+    // Only save if there are meaningful changes
+    const hasHealthChange = prevHealth.currentHealth !== health.currentHealth;
+    const hasNewEvents = health.healthEvents.length > prevHealth.healthEvents.length;
+    const hasTimeChange = prevHealth.lastUpdated.getTime() !== health.lastUpdated.getTime();
+
+    if (hasHealthChange || hasNewEvents || hasTimeChange) {
+      try {
+        localStorage.setItem('scoby-health', JSON.stringify(health));
+        prevHealthRef.current = health;
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+          console.error('localStorage quota exceeded. Clearing old health events...');
+          // Clear old health events to free up space
+          const recentEvents = health.healthEvents.slice(-50); // Keep only last 50 events
+          const trimmedHealth = {
+            ...health,
+            healthEvents: recentEvents,
+          };
+          try {
+            localStorage.setItem('scoby-health', JSON.stringify(trimmedHealth));
+            setHealth(trimmedHealth);
+            prevHealthRef.current = trimmedHealth;
+          } catch (retryError) {
+            console.error('Failed to save even after trimming events:', retryError);
+            // Clear all health events as last resort
+            const minimalHealth = {
+              ...health,
+              healthEvents: [],
+            };
+            localStorage.setItem('scoby-health', JSON.stringify(minimalHealth));
+            setHealth(minimalHealth);
+            prevHealthRef.current = minimalHealth;
+          }
+        } else {
+          console.error('Error saving health data:', error);
+        }
+      }
+    }
   }, [health]);
 
   // Calculate health based on batch performance
   const calculateBatchHealth = useCallback((batches: Batch[]): { healthChange: number; events: HealthEvent[] } => {
     let healthChange = 0;
     const events: HealthEvent[] = [];
+    const today = startOfDay(new Date());
 
     batches.forEach(batch => {
       if (batch.status === 'ready' || batch.status === 'bottled') {
-        // Successful batch completion
-        const successEvent: HealthEvent = {
-          id: `batch-success-${batch.id}`,
-          type: 'BATCH_SUCCESS',
-          value: HEALTH_CHANGES.BATCH_SUCCESS,
-          timestamp: new Date(),
-          description: `Successfully completed ${batch.name}`,
-        };
-        events.push(successEvent);
-        healthChange += HEALTH_CHANGES.BATCH_SUCCESS;
+        // Check if we already have a success event for this batch
+        const existingSuccessEvent = health.healthEvents.find(
+          event => event.id === `batch-success-${batch.id}`
+        );
+        
+        if (!existingSuccessEvent) {
+          // Successful batch completion
+          const successEvent: HealthEvent = {
+            id: `batch-success-${batch.id}`,
+            type: 'BATCH_SUCCESS',
+            value: HEALTH_CHANGES.BATCH_SUCCESS,
+            timestamp: new Date(),
+            description: `Successfully completed ${batch.name}`,
+          };
+          events.push(successEvent);
+          healthChange += HEALTH_CHANGES.BATCH_SUCCESS;
+        }
       } else if (batch.status === 'brewing') {
         // Check for overdue batches (more than 2 days over target)
         if (batch.currentDay > batch.targetDays + 2) {
-          const overdueEvent: HealthEvent = {
-            id: `batch-overdue-${batch.id}`,
-            type: 'BATCH_OVERDUE',
-            value: HEALTH_CHANGES.BATCH_OVERDUE,
-            timestamp: new Date(),
-            description: `${batch.name} is overdue by ${batch.currentDay - batch.targetDays} days`,
-          };
-          events.push(overdueEvent);
-          healthChange += HEALTH_CHANGES.BATCH_OVERDUE;
+          // Check if we already have an overdue event for this batch today
+          const existingOverdueEvent = health.healthEvents.find(
+            event => event.id === `batch-overdue-${batch.id}` &&
+            startOfDay(event.timestamp).getTime() === today.getTime()
+          );
+          
+          if (!existingOverdueEvent) {
+            const overdueEvent: HealthEvent = {
+              id: `batch-overdue-${batch.id}`,
+              type: 'BATCH_OVERDUE',
+              value: HEALTH_CHANGES.BATCH_OVERDUE,
+              timestamp: new Date(),
+              description: `${batch.name} is overdue by ${batch.currentDay - batch.targetDays} days`,
+            };
+            events.push(overdueEvent);
+            healthChange += HEALTH_CHANGES.BATCH_OVERDUE;
+          }
         }
         
-        // Daily care bonus for active batches
-        const lastEvent = health.healthEvents.find(
+        // Daily care bonus for active batches - only once per day
+        const lastCareEvent = health.healthEvents.find(
           event => event.description.includes(batch.name) && 
           event.type === 'DAILY_CARE' &&
-          differenceInDays(new Date(), event.timestamp) === 0
+          startOfDay(event.timestamp).getTime() === today.getTime()
         );
         
-        if (!lastEvent) {
+        if (!lastCareEvent) {
           const careEvent: HealthEvent = {
-            id: `daily-care-${batch.id}-${Date.now()}`,
+            id: `daily-care-${batch.id}-${today.getTime()}`,
             type: 'DAILY_CARE',
             value: HEALTH_CHANGES.DAILY_CARE,
             timestamp: new Date(),
@@ -140,29 +208,40 @@ export const useScobyHealth = () => {
     
     let totalHealthChange = healthChange + timeDecay;
     
-    // Add time decay event if applicable
+    // Add time decay event if applicable - only once per day
     if (timeDecay < 0) {
-      const decayEvent: HealthEvent = {
-        id: `time-decay-${Date.now()}`,
-        type: 'TIME_DECAY',
-        value: timeDecay,
-        timestamp: new Date(),
-        description: `Health decay due to inactivity`,
-      };
-      events.push(decayEvent);
+      const today = startOfDay(new Date());
+      const existingDecayEvent = health.healthEvents.find(
+        event => event.type === 'TIME_DECAY' &&
+        startOfDay(event.timestamp).getTime() === today.getTime()
+      );
+      
+      if (!existingDecayEvent) {
+        const decayEvent: HealthEvent = {
+          id: `time-decay-${today.getTime()}`,
+          type: 'TIME_DECAY',
+          value: timeDecay,
+          timestamp: new Date(),
+          description: `Health decay due to inactivity`,
+        };
+        events.push(decayEvent);
+      }
     }
 
-    const newHealth = Math.max(
-      MIN_HEALTH,
-      Math.min(MAX_HEALTH, health.currentHealth + totalHealthChange)
-    );
+    // Only update if there are actual changes
+    if (totalHealthChange !== 0 || events.length > 0) {
+      const newHealth = Math.max(
+        MIN_HEALTH,
+        Math.min(MAX_HEALTH, health.currentHealth + totalHealthChange)
+      );
 
-    setHealth(prev => ({
-      ...prev,
-      currentHealth: newHealth,
-      healthEvents: [...prev.healthEvents, ...events],
-      lastUpdated: new Date(),
-    }));
+      setHealth(prev => ({
+        ...prev,
+        currentHealth: newHealth,
+        healthEvents: [...prev.healthEvents, ...events],
+        lastUpdated: new Date(),
+      }));
+    }
 
     return { healthChange: totalHealthChange, events };
   }, [health.currentHealth, health.lastUpdated, calculateBatchHealth, calculateTimeDecay]);

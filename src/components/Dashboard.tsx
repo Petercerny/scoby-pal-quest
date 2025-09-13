@@ -131,8 +131,8 @@ export const Dashboard = () => {
     if (batches.length > 0) {
       const { healthChange, events } = updateHealthFromBatches(batches);
       
-      // Show health change notification if significant
-      if (Math.abs(healthChange) >= 3) {
+      // Only show notification if there was an actual health change and it's significant
+      if (healthChange !== 0 && Math.abs(healthChange) >= 3) {
         const isPositive = healthChange > 0;
         toast({
           title: isPositive ? "SCOBY Health Improved! 🌱" : "SCOBY Health Affected ⚠️",
