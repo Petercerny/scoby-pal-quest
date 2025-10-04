@@ -14,63 +14,20 @@ import {
   Minus
 } from "lucide-react";
 import { HealthRing } from "./HealthRing";
-import { ScopyAvatar } from "./ScopyAvatar";
+import { ScobyAvatar } from "./ScobyAvatar";
 import { MiniPuzzle } from "./MiniPuzzle";
 import { QuestCard } from "./QuestCard";
 import { BatchForm } from "./BatchForm";
 import { useToast } from "@/hooks/use-toast";
 import { useBatches } from "@/hooks/useBatches";
 import { useScobyHealth } from "@/hooks/useScobyHealth";
+import { useQuests } from "@/hooks/useQuests";
 import { Batch, BatchFormData } from "@/types/batch";
 import { format } from "date-fns";
 import { Progress } from "@/components/ui/progress";
 
-export interface Quest {
-  id: string;
-  title: string;
-  description: string;
-  type: 'CARE' | 'PUZZLE';
-  status: 'PENDING' | 'DONE';
-  rewardXP: number;
-  icon: 'temperature' | 'photo' | 'puzzle';
-  timeEstimate?: string;
-}
-
-const mockQuests: Quest[] = [
-  {
-    id: '1',
-    title: 'Check Temperature',
-    description: 'Record your batch temperature',
-    type: 'CARE' as const,
-    status: 'PENDING' as const,
-    rewardXP: 10,
-    icon: 'temperature' as const,
-    timeEstimate: '30 sec'
-  },
-  {
-    id: '2',
-    title: 'Take Photo',
-    description: 'Capture your SCOBY progress',
-    type: 'CARE' as const,
-    status: 'PENDING' as const,
-    rewardXP: 15,
-    icon: 'photo' as const,
-    timeEstimate: '1 min'
-  },
-  {
-    id: '3',
-    title: 'Logic Puzzle',
-    description: 'Solve today\'s brain teaser',
-    type: 'PUZZLE' as const,
-    status: 'PENDING' as const,
-    rewardXP: 25,
-    icon: 'puzzle' as const,
-    timeEstimate: '2 min'
-  }
-];
 
 export const Dashboard = () => {
-  const [quests, setQuests] = useState(mockQuests);
   const [showPuzzle, setShowPuzzle] = useState(false);
   const [showNewBatchForm, setShowNewBatchForm] = useState(false);
   const [pinnedBatchId, setPinnedBatchId] = useState<string | null>(null);
@@ -111,6 +68,8 @@ export const Dashboard = () => {
     getRecentHealthEvents,
     getHealthTrend
   } = useScobyHealth();
+
+  const { avatar, quests, completeQuest, getQuestsByFilter } = useQuests();
 
   const stats = getBatchStats();
   const activeBatches = getActiveBatches();
@@ -165,43 +124,33 @@ export const Dashboard = () => {
   const handleQuestComplete = (questId: string) => {
     const quest = quests.find(q => q.id === questId);
     
-    if (quest?.type === 'PUZZLE') {
+    if (quest?.title.toLowerCase().includes('puzzle')) {
       setShowPuzzle(true);
       return;
     }
     
-    setQuests(prev => prev.map(quest => 
-      quest.id === questId 
-        ? { ...quest, status: 'DONE' as const }
-        : quest
-    ));
+    // Use the new quest system
+    completeQuest(questId);
     
-    // Award XP and health
-    const completedQuest = quests.find(q => q.id === questId);
-    if (completedQuest && completedQuest.status === 'PENDING') {
-      const healthGain = addQuestHealth(completedQuest.title);
+    // Show completion toast
+    if (quest) {
+      const xpReward = quest.xpReward;
+      const healthReward = quest.healthReward;
       toast({
         title: "Quest completed! 🎉",
-        description: `You earned ${completedQuest.rewardXP} XP and ${healthGain} health points!`,
+        description: `You earned ${xpReward} XP and ${healthReward} health points!`,
       });
     }
   };
 
   const handlePuzzleComplete = () => {
     // Complete the puzzle quest
-    setQuests(prev => prev.map(quest => 
-      quest.type === 'PUZZLE' 
-        ? { ...quest, status: 'DONE' as const }
-        : quest
-    ));
-    
-    // Award XP and health
-    const puzzleQuest = quests.find(q => q.type === 'PUZZLE');
+    const puzzleQuest = quests.find(q => q.title.toLowerCase().includes('puzzle'));
     if (puzzleQuest) {
-      const healthGain = addQuestHealth(puzzleQuest.title);
+      completeQuest(puzzleQuest.id);
       toast({
         title: "Puzzle solved! 🧩",
-        description: `You earned ${puzzleQuest.rewardXP} XP and ${healthGain} health points!`,
+        description: `You earned ${puzzleQuest.xpReward} XP and ${puzzleQuest.healthReward} health points!`,
       });
     }
   };
@@ -218,7 +167,7 @@ export const Dashboard = () => {
     return getHealthMood();
   };
 
-  const completedQuests = quests.filter(q => q.status === 'DONE').length;
+  const completedQuests = quests.filter(q => q.isCompleted).length;
   const totalQuests = quests.length;
 
   const getGreeting = () => {
@@ -308,28 +257,30 @@ export const Dashboard = () => {
                   <>
                     {/* Batch Progress Ring */}
                     <div className="relative inline-flex items-center justify-center">
-                      <svg width={180} height={180} className="transform -rotate-90">
+                      <svg width={220} height={220} className="transform -rotate-90">
                         {/* Background circle */}
                         <circle
-                          cx={90}
-                          cy={90}
-                          r={40}
+                          cx={110}
+                          cy={110}
+                          r={50}
                           stroke="hsl(var(--muted))"
-                          strokeWidth={10}
+                          strokeWidth={12}
                           fill="transparent"
                           className="opacity-20"
                         />
                         
                         {/* Progress circle */}
                         <circle
-                          cx={90}
-                          cy={90}
-                          r={40}
+                          cx={110}
+                          cy={110}
+                          r={50}
                           stroke="currentColor"
-                          strokeWidth={10}
+                          strokeWidth={12}
                           fill="transparent"
-                          strokeDasharray={251.2}
-                          strokeDashoffset={251.2 - ((featuredBatch.currentDay / featuredBatch.targetDays) * 251.2)}
+                          strokeDasharray={314}
+                          strokeDashoffset={314 - ((featuredBatch.status === 'f2_brewing' 
+                            ? (featuredBatch.f2CurrentDay || 0) / (featuredBatch.f2TargetDays || 1)
+                            : featuredBatch.currentDay / featuredBatch.targetDays) * 314)}
                           strokeLinecap="round"
                           className="stroke-primary transition-all duration-1000 ease-out"
                         />
@@ -337,11 +288,15 @@ export const Dashboard = () => {
                       
                       {/* Center content */}
                       <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-2">
-                        <div className="text-2xl font-bold text-foreground leading-none">
-                          {Math.round((featuredBatch.currentDay / featuredBatch.targetDays) * 100)}%
+                        <div className="text-3xl font-bold text-foreground leading-none">
+                          {Math.round((featuredBatch.status === 'f2_brewing' 
+                            ? ((featuredBatch.f2CurrentDay || 0) / (featuredBatch.f2TargetDays || 1)) * 100
+                            : (featuredBatch.currentDay / featuredBatch.targetDays) * 100))}%
                         </div>
-                        <div className="text-xs text-muted-foreground font-medium leading-tight mt-1">
-                          Day {featuredBatch.currentDay}/{featuredBatch.targetDays}
+                        <div className="text-sm text-muted-foreground font-medium leading-tight mt-1">
+                          {featuredBatch.status === 'f2_brewing' 
+                            ? `F2 Day ${featuredBatch.f2CurrentDay || 0}/${featuredBatch.f2TargetDays || 1}`
+                            : `Day ${featuredBatch.currentDay}/${featuredBatch.targetDays}`}
                         </div>
                       </div>
                     </div>
@@ -360,12 +315,35 @@ export const Dashboard = () => {
                       <div className="w-full bg-muted rounded-full h-2">
                         <div 
                           className="bg-primary h-2 rounded-full transition-all duration-500"
-                          style={{ width: `${(featuredBatch.currentDay / featuredBatch.targetDays) * 100}%` }}
+                          style={{ width: `${(featuredBatch.status === 'f2_brewing' 
+                            ? ((featuredBatch.f2CurrentDay || 0) / (featuredBatch.f2TargetDays || 1)) * 100
+                            : (featuredBatch.currentDay / featuredBatch.targetDays) * 100)}%` }}
                         />
                       </div>
                       
                       {/* Status */}
-                      {featuredBatch.currentDay >= featuredBatch.targetDays ? (
+                      {featuredBatch.status === 'f2_brewing' ? (
+                        (featuredBatch.f2CurrentDay || 0) >= (featuredBatch.f2TargetDays || 1) ? (
+                          <div className="space-y-2">
+                            <div className="flex items-center justify-center gap-2 text-sm text-scoby-healthy">
+                              <CheckCircle className="w-4 h-4" />
+                              F2 Ready to bottle!
+                            </div>
+                            <Button 
+                              size="sm" 
+                              onClick={() => updateBatchStatus(featuredBatch.id, 'f2_ready')}
+                              className="text-xs w-full"
+                            >
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              Mark F2 as Ready
+                            </Button>
+                          </div>
+                        ) : (
+                          <div className="text-xs text-muted-foreground">
+                            F2: {(featuredBatch.f2TargetDays || 1) - (featuredBatch.f2CurrentDay || 0)} days remaining
+                          </div>
+                        )
+                      ) : featuredBatch.currentDay >= featuredBatch.targetDays ? (
                         <div className="space-y-2">
                           <div className="flex items-center justify-center gap-2 text-sm text-scoby-healthy">
                             <CheckCircle className="w-4 h-4" />
@@ -404,7 +382,15 @@ export const Dashboard = () => {
                       <div className="text-xs text-muted-foreground border-t pt-2">
                         <div className="flex items-center justify-center gap-1">
                           <span>Health Impact:</span>
-                          {featuredBatch.currentDay >= featuredBatch.targetDays ? (
+                          {featuredBatch.status === 'f2_brewing' ? (
+                            (featuredBatch.f2CurrentDay || 0) >= (featuredBatch.f2TargetDays || 1) ? (
+                              <span className="text-scoby-healthy">+8 points when F2 bottled</span>
+                            ) : (featuredBatch.f2CurrentDay || 0) > (featuredBatch.f2TargetDays || 1) + 1 ? (
+                              <span className="text-scoby-danger">-3 points (F2 overdue)</span>
+                            ) : (
+                              <span className="text-primary">+2 points daily F2 care</span>
+                            )
+                          ) : featuredBatch.currentDay >= featuredBatch.targetDays ? (
                             <span className="text-scoby-healthy">+5 points when bottled</span>
                           ) : featuredBatch.currentDay > featuredBatch.targetDays + 2 ? (
                             <span className="text-scoby-danger">-5 points (overdue)</span>
@@ -433,19 +419,20 @@ export const Dashboard = () => {
 
             {/* SCOBY Avatar & Health */}
             <Card>
-              <CardContent className="p-6 text-center">
-                <ScopyAvatar 
-                  health={health.currentHealth} 
-                  mood={getScobyMood()} 
-                  size="lg" 
-                  animated={true} 
-                />
-                <p className="text-sm text-muted-foreground mt-3">
-                  Your SCOBY companion is {getHealthStatus().toLowerCase()}
-                </p>
+              <CardContent className="p-6">
+                <div className="flex flex-col items-center text-center">
+                  <ScobyAvatar 
+                    avatar={avatar}
+                    size="lg" 
+                    showStats={true}
+                  />
+                  <p className="text-sm text-muted-foreground mt-3">
+                    Your SCOBY companion is {getHealthStatus().toLowerCase()}
+                  </p>
+                </div>
                 
                 {/* Health Status */}
-                <div className="mt-4 space-y-3">
+                <div className="mt-4 space-y-3 text-center">
                   <div className="flex items-center justify-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-primary"></div>
                     <span className="text-sm font-medium">
@@ -528,30 +515,71 @@ export const Dashboard = () => {
 
           {/* Right Column - Quests and Stats */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Daily Quests */}
+            {/* Quest Overview */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Target className="w-5 h-5" />
-                  Daily Quests
+                  Quest Progress
                 </CardTitle>
                 <p className="text-sm text-muted-foreground">
                   Complete quests to earn XP and care for your SCOBY
                 </p>
               </CardHeader>
               <CardContent className="space-y-3">
-                {quests.map((quest) => (
-                  <QuestCard
-                    key={quest.id}
-                    quest={quest}
-                    onComplete={() => handleQuestComplete(quest.id)}
+                {/* Tutorial Progress */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>Tutorial Path</span>
+                    <span className="text-muted-foreground">
+                      {quests.filter(q => q.type === 'tutorial' && q.isCompleted).length} / {quests.filter(q => q.type === 'tutorial').length}
+                    </span>
+                  </div>
+                  <Progress 
+                    value={(quests.filter(q => q.type === 'tutorial' && q.isCompleted).length / quests.filter(q => q.type === 'tutorial').length) * 100} 
+                    className="h-2" 
                   />
-                ))}
-                <div className="pt-2">
-                  <Progress value={(completedQuests / totalQuests) * 100} className="h-2" />
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {completedQuests} of {totalQuests} quests completed
-                  </p>
+                </div>
+                
+                {/* Challenge Progress */}
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-sm">
+                    <span>Challenges</span>
+                    <span className="text-muted-foreground">
+                      {quests.filter(q => q.type === 'challenge' && q.isCompleted).length} / {quests.filter(q => q.type === 'challenge').length}
+                    </span>
+                  </div>
+                  <Progress 
+                    value={(quests.filter(q => q.type === 'challenge' && q.isCompleted).length / quests.filter(q => q.type === 'challenge').length) * 100} 
+                    className="h-2" 
+                  />
+                </div>
+                
+                {/* Available Quests */}
+                <div className="space-y-2">
+                  <div className="text-sm font-medium">Available Quests</div>
+                  <div className="space-y-1">
+                    {quests
+                      .filter(q => q.isUnlocked && !q.isCompleted && q.progress >= 100)
+                      .slice(0, 3)
+                      .map((quest) => (
+                        <div key={quest.id} className="flex items-center justify-between p-2 bg-muted/30 rounded text-sm">
+                          <span className="truncate">{quest.title}</span>
+                          <Button 
+                            size="sm" 
+                            onClick={() => completeQuest(quest.id)}
+                            className="text-xs h-6 px-2"
+                          >
+                            Complete
+                          </Button>
+                        </div>
+                      ))}
+                    {quests.filter(q => q.isUnlocked && !q.isCompleted && q.progress >= 100).length === 0 && (
+                      <div className="text-xs text-muted-foreground text-center py-2">
+                        No quests ready to complete
+                      </div>
+                    )}
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -574,15 +602,30 @@ export const Dashboard = () => {
                       <div className="flex-1">
                         <div className="font-medium text-sm">{batch.name}</div>
                         <div className="text-xs text-muted-foreground">
-                          Day {batch.currentDay} of {batch.targetDays} • {batch.teaType}
+                          {batch.status === 'f2_brewing' 
+                            ? `F2 Day ${batch.f2CurrentDay || 0} of ${batch.f2TargetDays || 1} • ${batch.teaType}`
+                            : `Day ${batch.currentDay} of ${batch.targetDays} • ${batch.teaType}`}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <Progress 
-                          value={(batch.currentDay / batch.targetDays) * 100} 
+                          value={batch.status === 'f2_brewing' 
+                            ? ((batch.f2CurrentDay || 0) / (batch.f2TargetDays || 1)) * 100
+                            : (batch.currentDay / batch.targetDays) * 100} 
                           className="w-20 h-2" 
                         />
-                        {batch.currentDay >= batch.targetDays && (
+                        {batch.status === 'f2_brewing' ? (
+                          (batch.f2CurrentDay || 0) >= (batch.f2TargetDays || 1) && (
+                            <Button 
+                              size="sm" 
+                              onClick={() => updateBatchStatus(batch.id, 'f2_ready')}
+                              className="text-xs"
+                            >
+                              <CheckCircle className="w-3 h-3 mr-1" />
+                              F2 Ready
+                            </Button>
+                          )
+                        ) : batch.currentDay >= batch.targetDays && (
                           <Button 
                             size="sm" 
                             onClick={() => updateBatchStatus(batch.id, 'ready')}
@@ -628,20 +671,20 @@ export const Dashboard = () => {
               
               <Card className="text-center">
                 <CardContent className="p-4">
-                  <div className="text-2xl font-bold text-secondary-accent">{userStats.level}</div>
-                  <div className="text-xs text-muted-foreground">Brew Level</div>
+                  <div className="text-2xl font-bold text-secondary-accent">{avatar.level}</div>
+                  <div className="text-xs text-muted-foreground">SCOBY Level</div>
                 </CardContent>
               </Card>
               
               <Card className="text-center">
                 <CardContent className="p-4">
                   <div className={`text-2xl font-bold ${
-                    health.currentHealth >= 80 ? 'text-scoby-healthy' :
-                    health.currentHealth >= 60 ? 'text-primary' :
-                    health.currentHealth >= 40 ? 'text-scoby-warning' :
+                    avatar.health >= 80 ? 'text-scoby-healthy' :
+                    avatar.health >= 60 ? 'text-primary' :
+                    avatar.health >= 40 ? 'text-scoby-warning' :
                     'text-scoby-danger'
                   }`}>
-                    {health.currentHealth}%
+                    {avatar.health}%
                   </div>
                   <div className="text-xs text-muted-foreground">SCOBY Health</div>
                 </CardContent>

@@ -315,55 +315,55 @@ export const LibraryPage = () => {
           <ul className="space-y-2">
             {Array.isArray(section.content) && section.content.map((item: string, index: number) => (
               <li key={index} className="flex items-start gap-2">
-                <CheckCircle className="w-4 h-4 text-primary mt-0.5 flex-shrink-0" />
-                <span className="text-sm">{item}</span>
+                <CheckCircle className="w-3 h-3 sm:w-4 sm:h-4 text-primary mt-0.5 flex-shrink-0" />
+                <span className="text-xs sm:text-sm leading-relaxed">{item}</span>
               </li>
             ))}
           </ul>
         );
       case 'tip':
         return (
-          <div className="flex gap-2 p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
-            <Icon className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
-            <span className="text-sm text-blue-800 dark:text-blue-200">{section.content}</span>
+          <div className="flex gap-2 p-2 sm:p-3 bg-blue-50 dark:bg-blue-950/20 rounded-lg border border-blue-200 dark:border-blue-800">
+            <Icon className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+            <span className="text-xs sm:text-sm text-blue-800 dark:text-blue-200 leading-relaxed">{section.content}</span>
           </div>
         );
       case 'warning':
         return (
-          <div className="flex gap-2 p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
-            <Icon className="w-4 h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
-            <span className="text-sm text-amber-800 dark:text-amber-200">{section.content}</span>
+          <div className="flex gap-2 p-2 sm:p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-200 dark:border-amber-800">
+            <Icon className="w-3 h-3 sm:w-4 sm:h-4 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+            <span className="text-xs sm:text-sm text-amber-800 dark:text-amber-200 leading-relaxed">{section.content}</span>
           </div>
         );
       case 'info':
         return (
-          <div className="flex gap-2 p-3 bg-gray-50 dark:bg-gray-950/20 rounded-lg border border-gray-200 dark:border-gray-800">
-            <Icon className="w-4 h-4 text-gray-600 dark:text-gray-400 mt-0.5 flex-shrink-0" />
-            <span className="text-sm text-gray-800 dark:text-gray-200">{section.content}</span>
+          <div className="flex gap-2 p-2 sm:p-3 bg-gray-50 dark:bg-gray-950/20 rounded-lg border border-gray-200 dark:border-gray-800">
+            <Icon className="w-3 h-3 sm:w-4 sm:h-4 text-gray-600 dark:text-gray-400 mt-0.5 flex-shrink-0" />
+            <span className="text-xs sm:text-sm text-gray-800 dark:text-gray-200 leading-relaxed">{section.content}</span>
           </div>
         );
       default:
-        return <p className="text-sm">{section.content}</p>;
+        return <p className="text-xs sm:text-sm leading-relaxed">{section.content}</p>;
     }
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 pb-24">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <div className="bg-background p-2 sm:p-4" style={{ minHeight: '100vh', paddingBottom: '120px' }}>
+      <div className="max-w-4xl mx-auto space-y-4 sm:space-y-6">
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="flex items-center justify-center gap-2">
-            <BookOpen className="w-8 h-8 text-primary" />
-            <h1 className="text-3xl font-bold">Kombucha Knowledge Library</h1>
+            <BookOpen className="w-6 h-6 sm:w-8 sm:h-8 text-primary" />
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold">Kombucha Knowledge Library</h1>
           </div>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-sm sm:text-base text-muted-foreground max-w-2xl mx-auto px-4">
             Master the art of kombucha brewing with our comprehensive guide. From basics to advanced techniques, everything you need to know is here.
           </p>
         </div>
 
         {/* Search and Filters */}
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-4 sm:p-6">
             <div className="space-y-4">
               {/* Search Bar */}
               <div className="relative">
@@ -377,21 +377,22 @@ export const LibraryPage = () => {
               </div>
 
               {/* Category Filters */}
-              <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2 justify-center sm:justify-start">
                 {categories.map((category) => {
                   const Icon = category.icon;
                   return (
                     <button
                       key={category.id}
                       onClick={() => setSelectedCategory(category.id)}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                      className={`flex items-center gap-1 sm:gap-2 px-2 sm:px-3 py-2 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
                         selectedCategory === category.id
                           ? 'bg-primary text-primary-foreground'
                           : 'bg-muted text-muted-foreground hover:bg-muted/80'
                       }`}
                     >
-                      <Icon className="w-4 h-4" />
-                      {category.name}
+                      <Icon className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="hidden xs:inline">{category.name}</span>
+                      <span className="xs:hidden">{category.name.charAt(0).toUpperCase()}</span>
                     </button>
                   );
                 })}
@@ -404,10 +405,10 @@ export const LibraryPage = () => {
         <div className="space-y-4">
           {filteredModules.length === 0 ? (
             <Card>
-              <CardContent className="p-8 text-center">
-                <BookOpen className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-semibold mb-2">No modules found</h3>
-                <p className="text-muted-foreground">
+              <CardContent className="p-6 sm:p-8 text-center">
+                <BookOpen className="w-10 h-10 sm:w-12 sm:h-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-base sm:text-lg font-semibold mb-2">No modules found</h3>
+                <p className="text-sm sm:text-base text-muted-foreground">
                   Try adjusting your search or filter criteria
                 </p>
               </CardContent>
@@ -423,22 +424,25 @@ export const LibraryPage = () => {
                     <Card>
                       <AccordionTrigger className="hover:no-underline">
                         <CardHeader className="flex-1 text-left">
-                          <div className="flex items-start gap-4">
-                            <div className="p-2 bg-primary/10 rounded-lg">
-                              <ModuleIcon className="w-6 h-6 text-primary" />
+                          <div className="flex items-start gap-3 sm:gap-4">
+                            <div className="p-2 bg-primary/10 rounded-lg flex-shrink-0">
+                              <ModuleIcon className="w-5 h-5 sm:w-6 sm:h-6 text-primary" />
                             </div>
-                            <div className="flex-1 space-y-2">
-                              <div className="flex items-center gap-2">
-                                <CardTitle className="text-lg">{module.title}</CardTitle>
-                                <Badge className={getDifficultyColor(module.difficulty)}>
-                                  {module.difficulty}
-                                </Badge>
-                                <Badge variant="outline" className="flex items-center gap-1">
-                                  <CategoryIcon className="w-3 h-3" />
-                                  {module.category}
-                                </Badge>
+                            <div className="flex-1 space-y-2 min-w-0">
+                              <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                <CardTitle className="text-base sm:text-lg leading-tight">{module.title}</CardTitle>
+                                <div className="flex flex-wrap gap-1 sm:gap-2">
+                                  <Badge className={`${getDifficultyColor(module.difficulty)} text-xs`}>
+                                    {module.difficulty}
+                                  </Badge>
+                                  <Badge variant="outline" className="flex items-center gap-1 text-xs">
+                                    <CategoryIcon className="w-3 h-3" />
+                                    <span className="hidden sm:inline">{module.category}</span>
+                                    <span className="sm:hidden">{module.category.charAt(0).toUpperCase()}</span>
+                                  </Badge>
+                                </div>
                               </div>
-                              <p className="text-sm text-muted-foreground">
+                              <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
                                 {module.description}
                               </p>
                             </div>
@@ -446,10 +450,10 @@ export const LibraryPage = () => {
                         </CardHeader>
                       </AccordionTrigger>
                       <AccordionContent>
-                        <CardContent className="space-y-4">
+                        <CardContent className="space-y-4 p-4 sm:p-6">
                           {module.content.sections.map((section, index) => (
                             <div key={index} className="space-y-2">
-                              <h4 className="font-semibold text-base">{section.title}</h4>
+                              <h4 className="font-semibold text-sm sm:text-base">{section.title}</h4>
                               {renderContent(section)}
                             </div>
                           ))}
@@ -464,30 +468,30 @@ export const LibraryPage = () => {
         </div>
 
         {/* Footer Stats */}
-        <Card>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+        <Card className="mb-8 mt-8">
+          <CardContent className="p-4 sm:p-6">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4 text-center">
               <div>
-                <div className="text-2xl font-bold text-primary">{knowledgeModules.length}</div>
-                <div className="text-sm text-muted-foreground">Knowledge Modules</div>
+                <div className="text-lg sm:text-2xl font-bold text-primary">{knowledgeModules.length}</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Knowledge Modules</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-primary">
+                <div className="text-lg sm:text-2xl font-bold text-primary">
                   {knowledgeModules.filter(m => m.difficulty === 'beginner').length}
                 </div>
-                <div className="text-sm text-muted-foreground">Beginner Friendly</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Beginner Friendly</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-primary">
+                <div className="text-lg sm:text-2xl font-bold text-primary">
                   {knowledgeModules.filter(m => m.difficulty === 'intermediate').length}
                 </div>
-                <div className="text-sm text-muted-foreground">Intermediate</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Intermediate</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-primary">
+                <div className="text-lg sm:text-2xl font-bold text-primary">
                   {knowledgeModules.filter(m => m.difficulty === 'advanced').length}
                 </div>
-                <div className="text-sm text-muted-foreground">Advanced</div>
+                <div className="text-xs sm:text-sm text-muted-foreground">Advanced</div>
               </div>
             </div>
           </CardContent>

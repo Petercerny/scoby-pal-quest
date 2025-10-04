@@ -163,6 +163,19 @@ All colors MUST be HSL.
   .health-glow {
     animation: healthGlow 2s ease-in-out infinite alternate;
   }
+  
+  /* Gentle floating animations for bubbles - automatic slow floating */
+  .float-slow {
+    animation: float 8s ease-in-out infinite;
+  }
+  
+  .float-medium {
+    animation: float 10s ease-in-out infinite 2s;
+  }
+  
+  .float-slower {
+    animation: float 12s ease-in-out infinite 4s;
+  }
 }
 
 @layer utilities {
@@ -182,5 +195,14 @@ All colors MUST be HSL.
   @keyframes healthGlow {
     0% { box-shadow: 0 0 5px hsl(var(--scoby-healthy) / 0.3); }
     100% { box-shadow: 0 0 20px hsl(var(--scoby-healthy) / 0.6); }
+  }
+  
+  @keyframes float {
+    0%, 100% { 
+      transform: translateY(0px); 
+    }
+    50% { 
+      transform: translateY(-1px); 
+    }
   }
 }
