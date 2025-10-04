@@ -74,21 +74,21 @@ export const F2StartForm = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <Card className="w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
-          <div className="flex items-center gap-2">
-            <FlaskConical className="w-5 h-5 text-purple-600" />
-            <CardTitle className="text-lg">Start F2 Fermentation</CardTitle>
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-2 sm:p-4 z-50">
+      <Card className="w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 flex-shrink-0">
+          <div className="flex items-center gap-2 min-w-0">
+            <FlaskConical className="w-5 h-5 text-purple-600 flex-shrink-0" />
+            <CardTitle className="text-lg truncate">Start F2 Fermentation</CardTitle>
           </div>
-          <Button variant="ghost" size="sm" onClick={onClose}>
+          <Button variant="ghost" size="sm" onClick={onClose} className="flex-shrink-0">
             <X className="w-4 h-4" />
           </Button>
         </CardHeader>
         
-        <CardContent>
+        <CardContent className="overflow-y-auto flex-1">
           <div className="mb-4 p-3 bg-muted/50 rounded-lg">
-            <div className="text-sm font-medium">{batch.name}</div>
+            <div className="text-sm font-medium truncate">{batch.name}</div>
             <div className="text-xs text-muted-foreground">
               F1 Complete - Ready for secondary fermentation
             </div>
@@ -140,13 +140,14 @@ export const F2StartForm = ({
                     </Button>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div className="space-y-1">
                       <Label className="text-xs">Name</Label>
                       <Input
                         placeholder="e.g., Fresh Strawberries"
                         value={flavoring.name}
                         onChange={(e) => updateFlavoring(flavoring.id, 'name', e.target.value)}
+                        className="min-w-0"
                       />
                     </div>
                     <div className="space-y-1">
@@ -155,7 +156,7 @@ export const F2StartForm = ({
                         value={flavoring.type}
                         onValueChange={(value) => updateFlavoring(flavoring.id, 'type', value)}
                       >
-                        <SelectTrigger>
+                        <SelectTrigger className="min-w-0">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -169,13 +170,14 @@ export const F2StartForm = ({
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <div className="space-y-1">
                       <Label className="text-xs">Amount</Label>
                       <Input
                         placeholder="e.g., 1 cup, 2 tbsp"
                         value={flavoring.amount}
                         onChange={(e) => updateFlavoring(flavoring.id, 'amount', e.target.value)}
+                        className="min-w-0"
                       />
                     </div>
                     <div className="space-y-1">
@@ -184,6 +186,7 @@ export const F2StartForm = ({
                         placeholder="e.g., Diced, Grated"
                         value={flavoring.notes || ''}
                         onChange={(e) => updateFlavoring(flavoring.id, 'notes', e.target.value)}
+                        className="min-w-0"
                       />
                     </div>
                   </div>
@@ -197,13 +200,13 @@ export const F2StartForm = ({
               )}
             </div>
 
-            <div className="flex gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={onClose} className="flex-1">
+            <div className="flex flex-col sm:flex-row gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={onClose} className="flex-1 order-2 sm:order-1">
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1">
-                <FlaskConical className="w-4 h-4 mr-2" />
-                Start F2 Fermentation
+              <Button type="submit" className="flex-1 order-1 sm:order-2">
+                <FlaskConical className="w-4 h-4 mr-2 flex-shrink-0" />
+                <span className="truncate">Start F2 Fermentation</span>
               </Button>
             </div>
           </form>

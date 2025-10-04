@@ -9,9 +9,11 @@ import {
   CheckCircle, 
   Wine, 
   Archive,
+  ArchiveRestore,
   Edit3,
   Sparkles,
-  FlaskConical
+  FlaskConical,
+  Calendar
 } from 'lucide-react';
 import { Batch } from '@/types/batch';
 import { 
@@ -25,6 +27,7 @@ interface BatchCardProps {
   batch: Batch;
   onStatusUpdate: (batchId: string, status: Batch['status']) => void;
   onArchive: (batchId: string) => void;
+  onUnarchive?: (batchId: string) => void;
   onDelete: (batchId: string) => void;
   onEdit?: (batch: Batch) => void;
   onStartF2?: (batch: Batch) => void;
@@ -34,16 +37,17 @@ export const BatchCard = ({
   batch, 
   onStatusUpdate, 
   onArchive, 
+  onUnarchive,
   onDelete,
   onEdit,
   onStartF2
 }: BatchCardProps) => {
   const getStatusColor = (status: Batch['status']) => {
     switch (status) {
-      case 'brewing': return 'bg-primary text-primary-foreground';
+      case 'planned': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';      case 'brewing': return 'bg-primary text-primary-foreground';
       case 'ready': return 'bg-scoby-healthy text-white';
-      case 'f2_brewing': return 'bg-purple-600 text-white';
-      case 'f2_ready': return 'bg-purple-500 text-white';
+      case 'f2_brewing': return 'bg-purple-600 hover:bg-purple-500 text-white';
+      case 'f2_ready': return 'bg-purple-500 hover:bg-purple-400 text-white';
       case 'bottled': return 'bg-secondary text-secondary-foreground';
       case 'archived': return 'bg-muted text-muted-foreground';
       default: return 'bg-muted text-muted-foreground';
@@ -52,6 +56,7 @@ export const BatchCard = ({
 
   const getStatusIcon = (status: Batch['status']) => {
     switch (status) {
+      case 'planned': return <Calendar className="w-4 h-4" />;
       case 'brewing': return <Clock className="w-4 h-4" />;
       case 'ready': return <CheckCircle className="w-4 h-4" />;
       case 'f2_brewing': return <FlaskConical className="w-4 h-4" />;
@@ -62,21 +67,67 @@ export const BatchCard = ({
     }
   };
 
+  const getStatusDisplayText = (status: Batch['status']) => {
+    switch (status) {
+      case 'planned': return 'Planned';
+      case 'brewing': return 'Brewing';
+      case 'ready': return 'Ready';
+      case 'f2_brewing': return 'F2 Brewing';
+      case 'f2_ready': return 'F2 Ready';
+      case 'bottled': return 'Bottled';
+      case 'archived': return 'Archived';
+      default: return status;
+    }
+  };
+
   const getProgressPercentage = () => {
+    if (batch.status === 'planned') {
+      return 0; // Planned batches always show 0% progress
+    }
     if (batch.status === 'brewing') {
+      // If the batch hasn't started yet (future start date), show 0% progress
+      const today = new Date();
+      const startDate = new Date(batch.startDate);
+      if (today < startDate) {
+        return 0;
+      }
       return Math.min((batch.currentDay / batch.targetDays) * 100, 100);
     }
     if (batch.status === 'f2_brewing' && batch.f2CurrentDay && batch.f2TargetDays) {
+      // If F2 hasn't started yet (future start date), show 0% progress
+      const today = new Date();
+      const f2StartDate = batch.f2StartDate ? new Date(batch.f2StartDate) : null;
+      if (f2StartDate && today < f2StartDate) {
+        return 0;
+      }
       return Math.min((batch.f2CurrentDay / batch.f2TargetDays) * 100, 100);
     }
     return 100;
   };
 
   const getDaysText = () => {
+    if (batch.status === 'planned') {
+      const today = new Date();
+      const startDate = new Date(batch.startDate);
+      const daysUntilStart = Math.ceil((startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      return `Starts in ${daysUntilStart} day${daysUntilStart === 1 ? '' : 's'}`;
+    }
     if (batch.status === 'brewing') {
+      const today = new Date();
+      const startDate = new Date(batch.startDate);
+      if (today < startDate) {
+        const daysUntilStart = Math.ceil((startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        return `Starts in ${daysUntilStart} day${daysUntilStart === 1 ? '' : 's'}`;
+      }
       return `F1 Day ${batch.currentDay} of ${batch.targetDays}`;
     }
     if (batch.status === 'f2_brewing' && batch.f2CurrentDay && batch.f2TargetDays) {
+      const today = new Date();
+      const f2StartDate = batch.f2StartDate ? new Date(batch.f2StartDate) : null;
+      if (f2StartDate && today < f2StartDate) {
+        const daysUntilStart = Math.ceil((f2StartDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        return `F2 starts in ${daysUntilStart} day${daysUntilStart === 1 ? '' : 's'}`;
+      }
       return `F2 Day ${batch.f2CurrentDay} of ${batch.f2TargetDays}`;
     }
     if (batch.status === 'ready') {
@@ -166,7 +217,7 @@ export const BatchCard = ({
               </Badge>
               <Badge className={`text-xs ${getStatusColor(batch.status)}`}>
                 {getStatusIcon(batch.status)}
-                <span className="ml-1 capitalize">{batch.status}</span>
+                <span className="ml-1">{getStatusDisplayText(batch.status)}</span>
               </Badge>
             </div>
           </div>
@@ -178,7 +229,7 @@ export const BatchCard = ({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              {onEdit && (
+              {onEdit && batch.status !== 'archived' && (
                 <DropdownMenuItem onClick={() => onEdit(batch)}>
                   <Edit3 className="w-4 h-4 mr-2" />
                   Edit Batch
@@ -188,6 +239,12 @@ export const BatchCard = ({
                 <DropdownMenuItem onClick={() => onArchive(batch.id)}>
                   <Archive className="w-4 h-4 mr-2" />
                   Archive
+                </DropdownMenuItem>
+              )}
+              {batch.status === 'archived' && onUnarchive && (
+                <DropdownMenuItem onClick={() => onUnarchive(batch.id)}>
+                  <ArchiveRestore className="w-4 h-4 mr-2" />
+                  Unarchive
                 </DropdownMenuItem>
               )}
               <DropdownMenuItem 
@@ -204,23 +261,50 @@ export const BatchCard = ({
       <CardContent className="pt-0">
         <div className="space-y-3">
           <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>Started: {format(batch.startDate, 'MMM d, yyyy')}</span>
+            <span>
+              {batch.status === 'planned' || (batch.status === 'brewing' && new Date() < new Date(batch.startDate))
+                ? `Planned for: ${format(batch.startDate, 'MMM d, yyyy')}`
+                : `Started: ${format(batch.startDate, 'MMM d, yyyy')}`
+              }
+            </span>
             <span className="flex items-center gap-1">
               <Clock className="w-4 h-4" />
               {getDaysText()}
             </span>
           </div>
           
-          {(batch.status === 'brewing' || batch.status === 'f2_brewing') && (
+          {(batch.status === 'planned' || batch.status === 'brewing' || batch.status === 'f2_brewing') && (
             <div className="space-y-2">
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>{batch.status === 'brewing' ? 'F1 Progress' : 'F2 Progress'}</span>
+                <span>
+                  {batch.status === 'planned' ? 'Planned Progress' : 
+                   batch.status === 'brewing' ? 'F1 Progress' : 'F2 Progress'}
+                </span>
                 <span>{Math.round(getProgressPercentage())}%</span>
               </div>
               <Progress value={getProgressPercentage()} className="h-2" />
             </div>
           )}
           
+          {/* Tea and Sugar Information */}
+          {(batch.teaAmount || batch.sugarAmount) && (
+            <div className="space-y-2">
+              <div className="text-xs font-medium text-muted-foreground">Ingredients:</div>
+              <div className="flex flex-wrap gap-2">
+                {batch.teaAmount && (
+                  <Badge variant="outline" className="text-xs">
+                    Tea: {batch.teaAmount} {batch.teaAmountType}
+                  </Badge>
+                )}
+                {batch.sugarAmount && (
+                  <Badge variant="outline" className="text-xs">
+                    Sugar: {batch.sugarAmount} {batch.sugarAmountType}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          )}
+
           {batch.notes && (
             <p className="text-sm text-muted-foreground bg-muted/50 p-2 rounded-md">
               {batch.notes}

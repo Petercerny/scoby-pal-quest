@@ -19,6 +19,19 @@ export const BatchesPage = () => {
   const [f2Batch, setF2Batch] = useState<Batch | undefined>();
   const [searchTerm, setSearchTerm] = useState('');
   const [activeTab, setActiveTab] = useState('all');
+
+  // Helper function to format status for display
+  const getStatusDisplayText = (status: Batch['status']) => {
+    switch (status) {
+      case 'brewing': return 'Brewing';
+      case 'ready': return 'Ready';
+      case 'f2_brewing': return 'F2 Brewing';
+      case 'f2_ready': return 'F2 Ready';
+      case 'bottled': return 'Bottled';
+      case 'archived': return 'Archived';
+      default: return status;
+    }
+  };
   
   const { 
     batches, 
@@ -27,6 +40,7 @@ export const BatchesPage = () => {
     updateBatchStatus,
     startF2Fermentation, 
     archiveBatch, 
+    unarchiveBatch,
     deleteBatch,
     getBatchStats 
   } = useBatches();
@@ -65,7 +79,7 @@ export const BatchesPage = () => {
     if (batch) {
       toast({
         title: "Status updated! 🔄",
-        description: `${batch.name} is now ${status}.`,
+        description: `${batch.name} is now ${getStatusDisplayText(status)}.`,
       });
     }
   };
@@ -77,6 +91,17 @@ export const BatchesPage = () => {
       toast({
         title: "Batch archived! 📁",
         description: `${batch.name} has been moved to archives.`,
+      });
+    }
+  };
+
+  const handleUnarchive = (batchId: string) => {
+    unarchiveBatch(batchId);
+    const batch = batches.find(b => b.id === batchId);
+    if (batch) {
+      toast({
+        title: "Batch restored! 🔄",
+        description: `${batch.name} has been restored from archives.`,
       });
     }
   };
@@ -114,7 +139,7 @@ export const BatchesPage = () => {
     
     let matchesTab = false;
     if (activeTab === 'all') {
-      matchesTab = true;
+      matchesTab = batch.status !== 'archived'; // Exclude archived batches from "All" tab
     } else if (activeTab === 'ready') {
       matchesTab = batch.status === 'ready' || batch.status === 'f2_ready';
     } else {
@@ -125,7 +150,7 @@ export const BatchesPage = () => {
   });
 
   const getTabCount = (status: string) => {
-    if (status === 'all') return batches.length;
+    if (status === 'all') return batches.filter(b => b.status !== 'archived').length;
     return batches.filter(b => b.status === status).length;
   };
 
@@ -134,44 +159,44 @@ export const BatchesPage = () => {
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-foreground">Your Batches</h1>
-            <p className="text-muted-foreground mt-1">
+          <div className="min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Your Batches</h1>
+            <p className="text-muted-foreground mt-1 text-sm sm:text-base">
               Track your kombucha fermentation journey
             </p>
           </div>
-          <Button onClick={() => setShowForm(true)} className="shrink-0">
+          <Button onClick={() => setShowForm(true)} className="shrink-0 w-full sm:w-auto">
             <Plus className="w-4 h-4 mr-2" />
-            New Batch
+            <span className="truncate">New Batch</span>
           </Button>
         </div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4">
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-primary">{stats.totalBatches}</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-xl sm:text-2xl font-bold text-primary">{stats.totalBatches}</div>
               <div className="text-xs text-muted-foreground">Total Batches</div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-scoby-healthy">{stats.activeBatches}</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-xl sm:text-2xl font-bold text-scoby-healthy">{stats.activeBatches}</div>
               <div className="text-xs text-muted-foreground">Active</div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-secondary">{stats.completedBatches}</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-xl sm:text-2xl font-bold text-secondary">{stats.completedBatches}</div>
               <div className="text-xs text-muted-foreground">Completed</div>
             </CardContent>
           </Card>
           
           <Card>
-            <CardContent className="p-4 text-center">
-              <div className="text-2xl font-bold text-accent">{stats.averageBrewingDays}</div>
+            <CardContent className="p-3 sm:p-4 text-center">
+              <div className="text-xl sm:text-2xl font-bold text-accent">{stats.averageBrewingDays}</div>
               <div className="text-xs text-muted-foreground">Avg Days</div>
             </CardContent>
           </Card>
@@ -182,7 +207,7 @@ export const BatchesPage = () => {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
             <Input
-              placeholder="Search batches by name, tea type, or notes..."
+              placeholder="Search batches..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"
@@ -192,14 +217,28 @@ export const BatchesPage = () => {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6">
-            <TabsTrigger value="all">All ({getTabCount('all')})</TabsTrigger>
-            <TabsTrigger value="brewing">F1 ({getTabCount('brewing')})</TabsTrigger>
-            <TabsTrigger value="f2_brewing">F2 ({getTabCount('f2_brewing')})</TabsTrigger>
-            <TabsTrigger value="ready">Ready ({getTabCount('ready') + getTabCount('f2_ready')})</TabsTrigger>
-            <TabsTrigger value="bottled">Bottled ({getTabCount('bottled')})</TabsTrigger>
-            <TabsTrigger value="archived">Archived ({getTabCount('archived')})</TabsTrigger>
-          </TabsList>
+          <div className="overflow-x-auto">
+            <TabsList className="grid w-full grid-cols-6 min-w-max">
+              <TabsTrigger value="all" className="text-xs px-2 py-2">
+                All ({getTabCount('all')})
+              </TabsTrigger>
+              <TabsTrigger value="brewing" className="text-xs px-2 py-2">
+                F1 ({getTabCount('brewing')})
+              </TabsTrigger>
+              <TabsTrigger value="f2_brewing" className="text-xs px-2 py-2">
+                F2 ({getTabCount('f2_brewing')})
+              </TabsTrigger>
+              <TabsTrigger value="ready" className="text-xs px-2 py-2">
+                Ready ({getTabCount('ready') + getTabCount('f2_ready')})
+              </TabsTrigger>
+              <TabsTrigger value="bottled" className="text-xs px-2 py-2">
+                Bottled ({getTabCount('bottled')})
+              </TabsTrigger>
+              <TabsTrigger value="archived" className="text-xs px-2 py-2">
+                Archived ({getTabCount('archived')})
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value={activeTab} className="mt-6">
             {filteredBatches.length === 0 ? (
@@ -215,13 +254,14 @@ export const BatchesPage = () => {
                 )}
               </div>
             ) : (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredBatches.map((batch) => (
                   <BatchCard
                     key={batch.id}
                     batch={batch}
                     onStatusUpdate={handleStatusUpdate}
                     onArchive={handleArchive}
+                    onUnarchive={handleUnarchive}
                     onDelete={handleDelete}
                     onEdit={handleEditBatch}
                     onStartF2={handleStartF2}

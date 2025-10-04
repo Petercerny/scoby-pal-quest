@@ -47,6 +47,15 @@ const DEMO_BATCHES: Omit<Batch, 'id' | 'currentDay' | 'createdAt' | 'updatedAt'>
     ],
     isActive: true,
   },
+  {
+    name: 'Future Oolong Batch',
+    startDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+    status: 'planned',
+    teaType: 'Oolong Tea',
+    notes: 'Planning to start this weekend',
+    targetDays: 8,
+    isActive: true,
+  },
 ];
 
 export const useBatches = () => {
@@ -84,6 +93,7 @@ export const useBatches = () => {
           f2StartDate: batch.f2StartDate ? new Date(batch.f2StartDate) : undefined,
           createdAt: new Date(batch.createdAt),
           updatedAt: new Date(batch.updatedAt),
+          previousStatus: batch.previousStatus || undefined, // Handle existing batches without this field
         }));
         setBatches(parsedBatches);
         prevBatchesRef.current = parsedBatches;
@@ -99,6 +109,7 @@ export const useBatches = () => {
         f2CurrentDay: demo.f2StartDate ? calculateF2CurrentDay(demo.f2StartDate) : undefined,
         createdAt: demo.startDate,
         updatedAt: new Date(),
+        previousStatus: undefined, // Demo batches don't have previous status
       }));
       setBatches(demoBatches);
       prevBatchesRef.current = demoBatches;
@@ -166,12 +177,28 @@ export const useBatches = () => {
   // Update all batches' current days
   const updateBatchDays = useCallback(() => {
     setBatches(prevBatches => 
-      prevBatches.map(batch => ({
-        ...batch,
-        currentDay: calculateCurrentDay(batch.startDate),
-        f2CurrentDay: batch.f2StartDate ? calculateF2CurrentDay(batch.f2StartDate) : undefined,
-        updatedAt: new Date(),
-      }))
+      prevBatches.map(batch => {
+        const now = new Date();
+        const startDate = new Date(batch.startDate);
+        
+        // Check if a planned batch should start brewing
+        if (batch.status === 'planned' && now >= startDate) {
+          return {
+            ...batch,
+            status: 'brewing',
+            currentDay: calculateCurrentDay(batch.startDate),
+            f2CurrentDay: batch.f2StartDate ? calculateF2CurrentDay(batch.f2StartDate) : undefined,
+            updatedAt: new Date(),
+          };
+        }
+        
+        return {
+          ...batch,
+          currentDay: calculateCurrentDay(batch.startDate),
+          f2CurrentDay: batch.f2StartDate ? calculateF2CurrentDay(batch.f2StartDate) : undefined,
+          updatedAt: new Date(),
+        };
+      })
     );
   }, [calculateCurrentDay, calculateF2CurrentDay]);
 
@@ -194,25 +221,55 @@ export const useBatches = () => {
   // Create a new batch
   const createBatch = useCallback((formData: BatchFormData): Batch => {
     const now = new Date();
+    
+    // Determine start date and target days based on input mode
+    let startDate: Date;
+    let targetDays: number;
+    
+    if (formData.useDateRange && formData.startDate && formData.endDate) {
+      // Use date range mode
+      startDate = formData.startDate;
+      targetDays = differenceInDays(formData.endDate, formData.startDate);
+    } else {
+      // Use days count mode
+      startDate = now;
+      targetDays = formData.targetDays;
+    }
+    
+    // Determine initial status based on start date
+    // Normalize both dates to start of day for accurate comparison
+    const normalizedStartDate = startOfDay(startDate);
+    const normalizedNow = startOfDay(now);
+    const isFutureStart = normalizedStartDate > normalizedNow;
+    const initialStatus = isFutureStart ? 'planned' : 'brewing';
+    
+    // Calculate the correct current day based on the start date
+    const currentDay = isFutureStart ? 1 : calculateCurrentDay(normalizedStartDate);
+    
     const newBatch: Batch = {
       id: `batch-${Date.now()}`,
       name: formData.name,
-      startDate: now,
-      status: 'brewing',
+      startDate: normalizedStartDate, // Use normalized start date
+      status: initialStatus,
       teaType: formData.teaType,
       notes: formData.notes,
-      targetDays: formData.targetDays,
-      currentDay: 1,
+      targetDays,
+      currentDay,
       isActive: true,
       createdAt: now,
       updatedAt: now,
+      previousStatus: undefined, // New batches don't have previous status
+      teaAmount: formData.teaAmount,
+      teaAmountType: formData.teaAmountType,
+      sugarAmount: formData.sugarAmount,
+      sugarAmountType: formData.sugarAmountType,
       f2TargetDays: formData.f2TargetDays,
       f2Flavorings: formData.f2Flavorings || [],
     };
 
     setBatches(prev => [...prev, newBatch]);
     return newBatch;
-  }, []);
+  }, [calculateCurrentDay]);
 
   // Update batch status
   const updateBatchStatus = useCallback((batchId: string, status: Batch['status']) => {
@@ -248,11 +305,57 @@ export const useBatches = () => {
   // Update batch details (name, tea type, notes, target days)
   const updateBatch = useCallback((batchId: string, updates: Partial<BatchFormData>) => {
     setBatches(prev => 
+      prev.map(batch => {
+        if (batch.id === batchId) {
+          let newBatch = { ...batch, updatedAt: new Date() };
+          
+          // Handle date range updates
+          if (updates.useDateRange && updates.startDate && updates.endDate) {
+            // Update start date and recalculate target days
+            const normalizedStartDate = startOfDay(updates.startDate);
+            const normalizedNow = startOfDay(new Date());
+            newBatch.startDate = normalizedStartDate;
+            newBatch.targetDays = differenceInDays(updates.endDate, updates.startDate);
+            
+            // Update status based on new start date
+            const isFutureStart = normalizedStartDate > normalizedNow;
+            newBatch.status = isFutureStart ? 'planned' : 'brewing';
+            
+            // Recalculate current day based on new start date
+            newBatch.currentDay = isFutureStart ? 1 : calculateCurrentDay(normalizedStartDate);
+          } else if (updates.targetDays !== undefined) {
+            // Update target days only
+            newBatch.targetDays = updates.targetDays;
+          }
+          
+          // Update other fields
+          if (updates.name !== undefined) newBatch.name = updates.name;
+          if (updates.teaType !== undefined) newBatch.teaType = updates.teaType;
+          if (updates.notes !== undefined) newBatch.notes = updates.notes;
+          if (updates.teaAmount !== undefined) newBatch.teaAmount = updates.teaAmount;
+          if (updates.teaAmountType !== undefined) newBatch.teaAmountType = updates.teaAmountType;
+          if (updates.sugarAmount !== undefined) newBatch.sugarAmount = updates.sugarAmount;
+          if (updates.sugarAmountType !== undefined) newBatch.sugarAmountType = updates.sugarAmountType;
+          if (updates.f2TargetDays !== undefined) newBatch.f2TargetDays = updates.f2TargetDays;
+          if (updates.f2Flavorings !== undefined) newBatch.f2Flavorings = updates.f2Flavorings;
+          
+          return newBatch;
+        }
+        return batch;
+      })
+    );
+  }, [calculateCurrentDay]);
+
+  // Archive a batch
+  const archiveBatch = useCallback((batchId: string) => {
+    setBatches(prev => 
       prev.map(batch => 
         batch.id === batchId 
           ? { 
               ...batch, 
-              ...updates, 
+              status: 'archived', 
+              previousStatus: batch.status, // Store the current status before archiving
+              isActive: false, 
               updatedAt: new Date() 
             }
           : batch
@@ -260,14 +363,24 @@ export const useBatches = () => {
     );
   }, []);
 
-  // Archive a batch
-  const archiveBatch = useCallback((batchId: string) => {
+  // Unarchive a batch (restore to previous status)
+  const unarchiveBatch = useCallback((batchId: string) => {
     setBatches(prev => 
-      prev.map(batch => 
-        batch.id === batchId 
-          ? { ...batch, status: 'archived', isActive: false, updatedAt: new Date() }
-          : batch
-      )
+      prev.map(batch => {
+        if (batch.id === batchId) {
+          // Restore to the previous status that was stored when archiving
+          const restoredStatus = batch.previousStatus || 'ready';
+          
+          return { 
+            ...batch, 
+            status: restoredStatus, 
+            previousStatus: undefined, // Clear the previous status
+            isActive: true, 
+            updatedAt: new Date() 
+          };
+        }
+        return batch;
+      })
     );
   }, []);
 
@@ -279,8 +392,8 @@ export const useBatches = () => {
   // Get batch statistics
   const getBatchStats = useCallback((): BatchStats => {
     const totalBatches = batches.length;
-    const activeBatches = batches.filter(b => b.isActive && b.status === 'brewing').length;
-    const completedBatches = batches.filter(b => ['ready', 'bottled'].includes(b.status)).length;
+    const activeBatches = batches.filter(b => b.isActive && (b.status === 'planned' || b.status === 'brewing' || b.status === 'f2_brewing')).length;
+    const completedBatches = batches.filter(b => ['ready', 'f2_ready', 'bottled'].includes(b.status)).length;
     
     const brewingBatches = batches.filter(b => b.status === 'brewing');
     const averageBrewingDays = brewingBatches.length > 0 
@@ -292,9 +405,10 @@ export const useBatches = () => {
     let maxBrewingDays = 0;
     
     for (const batch of batches) {
-      if (batch.isActive && batch.status === 'brewing') {
-        if (batch.currentDay > maxBrewingDays) {
-          maxBrewingDays = batch.currentDay;
+      if (batch.isActive && (batch.status === 'brewing' || batch.status === 'f2_brewing')) {
+        const currentDays = batch.status === 'f2_brewing' ? (batch.f2CurrentDay || 0) : batch.currentDay;
+        if (currentDays > maxBrewingDays) {
+          maxBrewingDays = currentDays;
           longestRunningBatch = batch;
         }
       }
@@ -309,9 +423,9 @@ export const useBatches = () => {
     };
   }, [batches]);
 
-  // Get active brewing batches
+  // Get active brewing batches (includes planned, F1 and F2 brewing)
   const getActiveBatches = useCallback(() => {
-    return batches.filter(batch => batch.isActive && batch.status === 'brewing');
+    return batches.filter(batch => batch.isActive && (batch.status === 'planned' || batch.status === 'brewing' || batch.status === 'f2_brewing'));
   }, [batches]);
 
   // Get batches by status
@@ -327,6 +441,7 @@ export const useBatches = () => {
     updateBatchStatus,
     startF2Fermentation,
     archiveBatch,
+    unarchiveBatch,
     deleteBatch,
     getBatchStats,
     getActiveBatches,
