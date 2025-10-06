@@ -1,4 +1,4 @@
-import { format } from 'date-fns';
+import { format, differenceInDays, startOfDay } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -42,6 +42,25 @@ export const BatchCard = ({
   onEdit,
   onStartF2
 }: BatchCardProps) => {
+  // Calculate current day dynamically
+  const getCurrentDay = (startDate: Date): number => {
+    const today = startOfDay(new Date());
+    const start = startOfDay(startDate);
+    const days = differenceInDays(today, start);
+    return Math.max(0, days + 1); // +1 because day 1 is the start date
+  };
+
+  // Calculate current F2 day dynamically
+  const getF2CurrentDay = (f2StartDate: Date): number => {
+    const today = startOfDay(new Date());
+    const start = startOfDay(f2StartDate);
+    const days = differenceInDays(today, start);
+    return Math.max(0, days + 1); // +1 because day 1 is the start date
+  };
+
+  // Get the actual current day for this batch
+  const currentDay = getCurrentDay(batch.startDate);
+  const f2CurrentDay = batch.f2StartDate ? getF2CurrentDay(batch.f2StartDate) : undefined;
   const getStatusColor = (status: Batch['status']) => {
     switch (status) {
       case 'planned': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';      case 'brewing': return 'bg-primary text-primary-foreground';
@@ -91,16 +110,16 @@ export const BatchCard = ({
       if (today < startDate) {
         return 0;
       }
-      return Math.min((batch.currentDay / batch.targetDays) * 100, 100);
+      return Math.min((currentDay / batch.targetDays) * 100, 100);
     }
-    if (batch.status === 'f2_brewing' && batch.f2CurrentDay && batch.f2TargetDays) {
+    if (batch.status === 'f2_brewing' && f2CurrentDay && batch.f2TargetDays) {
       // If F2 hasn't started yet (future start date), show 0% progress
       const today = new Date();
       const f2StartDate = batch.f2StartDate ? new Date(batch.f2StartDate) : null;
       if (f2StartDate && today < f2StartDate) {
         return 0;
       }
-      return Math.min((batch.f2CurrentDay / batch.f2TargetDays) * 100, 100);
+      return Math.min((f2CurrentDay / batch.f2TargetDays) * 100, 100);
     }
     return 100;
   };
@@ -119,28 +138,28 @@ export const BatchCard = ({
         const daysUntilStart = Math.ceil((startDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
         return `Starts in ${daysUntilStart} day${daysUntilStart === 1 ? '' : 's'}`;
       }
-      return `F1 Day ${batch.currentDay} of ${batch.targetDays}`;
+      return `F1 Day ${currentDay} of ${batch.targetDays}`;
     }
-    if (batch.status === 'f2_brewing' && batch.f2CurrentDay && batch.f2TargetDays) {
+    if (batch.status === 'f2_brewing' && f2CurrentDay && batch.f2TargetDays) {
       const today = new Date();
       const f2StartDate = batch.f2StartDate ? new Date(batch.f2StartDate) : null;
       if (f2StartDate && today < f2StartDate) {
         const daysUntilStart = Math.ceil((f2StartDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
         return `F2 starts in ${daysUntilStart} day${daysUntilStart === 1 ? '' : 's'}`;
       }
-      return `F2 Day ${batch.f2CurrentDay} of ${batch.f2TargetDays}`;
+      return `F2 Day ${f2CurrentDay} of ${batch.f2TargetDays}`;
     }
     if (batch.status === 'ready') {
-      return `F1 Complete (${batch.currentDay} days)`;
+      return `F1 Complete (${currentDay} days)`;
     }
     if (batch.status === 'f2_ready') {
-      return `F2 Complete (${batch.f2CurrentDay} days)`;
+      return `F2 Complete (${f2CurrentDay} days)`;
     }
-    return `Brewed for ${batch.currentDay} days`;
+    return `Brewed for ${currentDay} days`;
   };
 
   const getNextAction = () => {
-    if (batch.status === 'brewing' && batch.currentDay >= batch.targetDays) {
+    if (batch.status === 'brewing' && currentDay >= batch.targetDays) {
       return (
         <Button 
           size="sm" 
@@ -177,7 +196,7 @@ export const BatchCard = ({
         </div>
       );
     }
-    if (batch.status === 'f2_brewing' && batch.f2CurrentDay && batch.f2TargetDays && batch.f2CurrentDay >= batch.f2TargetDays) {
+    if (batch.status === 'f2_brewing' && f2CurrentDay && batch.f2TargetDays && f2CurrentDay >= batch.f2TargetDays) {
       return (
         <Button 
           size="sm" 
