@@ -178,8 +178,9 @@ export const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 pb-24">
-      <div className="max-w-4xl mx-auto space-y-6">
+    <>
+      <div className="min-h-screen bg-background p-4 pb-24">
+        <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -187,13 +188,28 @@ export const Dashboard = () => {
               {getGreeting()}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {stats.longestRunningBatch ? (
-                <>
-                  {stats.longestRunningBatch.name}: {stats.longestRunningBatch.currentDay}/{stats.longestRunningBatch.targetDays} days
-                </>
-              ) : (
-                "No active batches brewing"
-              )}
+              {(() => {
+                const brewingCount = batches.filter(b => b.isActive && (b.status === 'brewing' || b.status === 'f2_brewing')).length;
+                const readyCount = batches.filter(b => b.isActive && (b.status === 'ready' || b.status === 'f2_ready')).length;
+                const plannedCount = batches.filter(b => b.isActive && b.status === 'planned').length;
+                
+                if (brewingCount === 0 && readyCount === 0 && plannedCount === 0) {
+                  return "No active batches";
+                }
+                
+                const stats = [];
+                if (brewingCount > 0) {
+                  stats.push(`${brewingCount} batch${brewingCount > 1 ? 'es' : ''} brewing`);
+                }
+                if (readyCount > 0) {
+                  stats.push(`${readyCount} ready to bottle`);
+                }
+                if (plannedCount > 0) {
+                  stats.push(`${plannedCount} planned`);
+                }
+                
+                return stats.join(' • ');
+              })()}
             </p>
           </div>
           
@@ -278,9 +294,9 @@ export const Dashboard = () => {
                           strokeWidth={12}
                           fill="transparent"
                           strokeDasharray={314}
-                          strokeDashoffset={314 - ((featuredBatch.status === 'f2_brewing' 
+                          strokeDashoffset={314 - (Math.min((featuredBatch.status === 'f2_brewing' 
                             ? (featuredBatch.f2CurrentDay || 0) / (featuredBatch.f2TargetDays || 1)
-                            : featuredBatch.currentDay / featuredBatch.targetDays) * 314)}
+                            : featuredBatch.currentDay / featuredBatch.targetDays), 1) * 314)}
                           strokeLinecap="round"
                           className="stroke-primary transition-all duration-1000 ease-out"
                         />
@@ -289,9 +305,9 @@ export const Dashboard = () => {
                       {/* Center content */}
                       <div className="absolute inset-0 flex flex-col items-center justify-center text-center px-2">
                         <div className="text-3xl font-bold text-foreground leading-none">
-                          {Math.round((featuredBatch.status === 'f2_brewing' 
+                          {Math.round(Math.min((featuredBatch.status === 'f2_brewing' 
                             ? ((featuredBatch.f2CurrentDay || 0) / (featuredBatch.f2TargetDays || 1)) * 100
-                            : (featuredBatch.currentDay / featuredBatch.targetDays) * 100))}%
+                              : (featuredBatch.currentDay / featuredBatch.targetDays) * 100), 100))}%
                         </div>
                         <div className="text-sm text-muted-foreground font-medium leading-tight mt-1">
                           {featuredBatch.status === 'f2_brewing' 
@@ -315,9 +331,9 @@ export const Dashboard = () => {
                       <div className="w-full bg-muted rounded-full h-2">
                         <div 
                           className="bg-primary h-2 rounded-full transition-all duration-500"
-                          style={{ width: `${(featuredBatch.status === 'f2_brewing' 
+                          style={{ width: `${Math.min((featuredBatch.status === 'f2_brewing' 
                             ? ((featuredBatch.f2CurrentDay || 0) / (featuredBatch.f2TargetDays || 1)) * 100
-                            : (featuredBatch.currentDay / featuredBatch.targetDays) * 100)}%` }}
+                            : (featuredBatch.currentDay / featuredBatch.targetDays) * 100), 100)}%` }}
                         />
                       </div>
                       
@@ -536,7 +552,7 @@ export const Dashboard = () => {
                     </span>
                   </div>
                   <Progress 
-                    value={(quests.filter(q => q.type === 'tutorial' && q.isCompleted).length / quests.filter(q => q.type === 'tutorial').length) * 100} 
+                    value={Math.min((quests.filter(q => q.type === 'tutorial' && q.isCompleted).length / quests.filter(q => q.type === 'tutorial').length) * 100, 100)} 
                     className="h-2" 
                   />
                 </div>
@@ -550,7 +566,7 @@ export const Dashboard = () => {
                     </span>
                   </div>
                   <Progress 
-                    value={(quests.filter(q => q.type === 'challenge' && q.isCompleted).length / quests.filter(q => q.type === 'challenge').length) * 100} 
+                    value={Math.min((quests.filter(q => q.type === 'challenge' && q.isCompleted).length / quests.filter(q => q.type === 'challenge').length) * 100, 100)} 
                     className="h-2" 
                   />
                 </div>
@@ -603,19 +619,48 @@ export const Dashboard = () => {
                         <div className="font-medium text-sm">{batch.name}</div>
                         <div className="text-xs text-muted-foreground">
                           {batch.status === 'f2_brewing' 
-                            ? `F2 Day ${batch.f2CurrentDay || 0} of ${batch.f2TargetDays || 1} • ${batch.teaType}`
-                            : `Day ${batch.currentDay} of ${batch.targetDays} • ${batch.teaType}`}
+                            ? `F2 Day ${(() => {
+                                if (!batch.f2StartDate) return 0;
+                                const today = new Date();
+                                const start = new Date(batch.f2StartDate);
+                                const days = Math.max(0, Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+                                return days;
+                              })()} of ${batch.f2TargetDays || 1} • ${batch.teaType}`
+                            : `Day ${(() => {
+                                const today = new Date();
+                                const start = new Date(batch.startDate);
+                                const days = Math.max(0, Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+                                return days;
+                              })()} of ${batch.targetDays} • ${batch.teaType}`}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
                         <Progress 
                           value={batch.status === 'f2_brewing' 
-                            ? ((batch.f2CurrentDay || 0) / (batch.f2TargetDays || 1)) * 100
-                            : (batch.currentDay / batch.targetDays) * 100} 
+                            ? (() => {
+                                if (!batch.f2StartDate) return 0;
+                                const today = new Date();
+                                const start = new Date(batch.f2StartDate);
+                                const days = Math.max(0, Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+                                return Math.min((days / (batch.f2TargetDays || 1)) * 100, 100);
+                              })()
+                            : (() => {
+                                const today = new Date();
+                                const start = new Date(batch.startDate);
+                                const days = Math.max(0, Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+                                return Math.min((days / batch.targetDays) * 100, 100);
+                              })()
+                          } 
                           className="w-20 h-2" 
                         />
                         {batch.status === 'f2_brewing' ? (
-                          (batch.f2CurrentDay || 0) >= (batch.f2TargetDays || 1) && (
+                          (() => {
+                            if (!batch.f2StartDate) return false;
+                            const today = new Date();
+                            const start = new Date(batch.f2StartDate);
+                            const days = Math.max(0, Math.floor((today.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1);
+                            return days >= (batch.f2TargetDays || 1);
+                          })() && (
                             <Button 
                               size="sm" 
                               onClick={() => updateBatchStatus(batch.id, 'f2_ready')}
@@ -693,22 +738,24 @@ export const Dashboard = () => {
           </div>
         </div>
 
-        {/* Mini Puzzle Modal */}
-        <MiniPuzzle
-          isOpen={showPuzzle}
-          onClose={() => setShowPuzzle(false)}
-          onComplete={handlePuzzleComplete}
-          difficulty="easy"
-        />
-
-        {/* Batch Form Modal */}
-        <BatchForm
-          isOpen={showNewBatchForm}
-          onClose={() => setShowNewBatchForm(false)}
-          onSubmit={handleCreateBatch}
-          title="New Batch"
-        />
+        </div>
       </div>
-    </div>
+
+      {/* Mini Puzzle Modal */}
+      <MiniPuzzle
+        isOpen={showPuzzle}
+        onClose={() => setShowPuzzle(false)}
+        onComplete={handlePuzzleComplete}
+        difficulty="easy"
+      />
+
+      {/* Batch Form Modal */}
+      <BatchForm
+        isOpen={showNewBatchForm}
+        onClose={() => setShowNewBatchForm(false)}
+        onSubmit={handleCreateBatch}
+        title="New Batch"
+      />
+    </>
   );
 };

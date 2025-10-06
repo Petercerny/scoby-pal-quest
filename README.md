@@ -1,72 +1,195 @@
-# Kombucha Companion - Your Fermentation Journey
+# 🫖 SCOBY Pal Quest - Your Kombucha Brewing Companion
 
-## Project info
+A delightful gamified fermentation companion app that helps you track your kombucha brewing journey, care for your virtual SCOBY pet, and complete daily quests while learning the art of kombucha making.
 
-A delightful fermentation companion app that helps you track your kombucha brewing, care for your SCOBY pet, and complete daily quests.
+## ✨ Features
 
-## How can I edit this code?
+### 🎮 Gamified Experience
+- **Virtual SCOBY Pet**: Care for your digital SCOBY companion with a dynamic health system
+- **Quest System**: Complete tutorial and challenge quests to earn XP and health rewards
+- **Leveling System**: Progress through brewing levels based on your fermentation experience
+- **Achievements**: Unlock titles and rewards as you master kombucha brewing
 
-There are several ways of editing your application.
+### 🫖 Batch Management
+- **Smart Tracking**: Automatically track brewing days and fermentation progress
+- **Batch Lifecycle**: Manage batches from brewing → ready → bottled → archived
+- **F2 Fermentation**: Track second fermentation for carbonation and flavoring
+- **Batch Statistics**: View comprehensive stats on your brewing history
+- **Pin System**: Pin important batches for quick access
 
-**Use your preferred IDE**
+### 🏥 SCOBY Health System
+- **Dynamic Health**: SCOBY health changes based on your brewing activities
+- **Health Rewards**: Gain health points for successful batches and quest completion
+- **Health Warnings**: Get alerts when batches are overdue or need attention
+- **Visual Feedback**: Health ring with color-coded status and trend indicators
 
-If you want to work locally using your own IDE, you can clone this repo and push changes.
+### 📚 Knowledge Library
+- **Comprehensive Guide**: Learn everything about kombucha brewing
+- **Categorized Content**: Browse by basics, brewing, troubleshooting, and advanced topics
+- **Search Functionality**: Find specific information quickly
+- **Progressive Learning**: Structured modules from beginner to advanced
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+### 🎯 Quest System
+- **Tutorial Quests**: Step-by-step guidance for beginners
+- **Challenge Quests**: Ongoing challenges for experienced brewers
+- **Reward System**: Earn XP, health points, and unlockable titles
+- **Progress Tracking**: Visual progress indicators for all quests
 
-Follow these steps:
+### 📱 Modern Interface
+- **Mobile-First Design**: Optimized for mobile devices with responsive layout
+- **Intuitive Navigation**: Bottom navigation with 5 main sections
+- **Real-time Updates**: Live progress tracking and health monitoring
+- **Toast Notifications**: Helpful feedback for all actions
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v18 or higher) - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+- npm or yarn package manager
+
+### Installation
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
+# Clone the repository
 git clone <YOUR_GIT_URL>
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Navigate to the project directory
+cd scoby-pal-quest
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Install dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The app will be available at `http://localhost:5173`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
-
-**Use GitHub Codespaces**
-
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
-
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-This project can be deployed to any static hosting service such as:
-
-- **Vercel**: Connect your GitHub repository and deploy automatically
-- **Netlify**: Drag and drop your build folder or connect via Git
-- **GitHub Pages**: Use GitHub Actions to build and deploy
-- **Firebase Hosting**: Deploy using Firebase CLI
-
-To build the project for production:
+### Development Scripts
 
 ```sh
+# Start development server
+npm run dev
+
+# Build for production
 npm run build
+
+# Preview production build
+npm run preview
+
+# Run linting
+npm run lint
+```
+
+## 📱 App Structure
+
+### Main Pages
+- **🏠 Dashboard**: Overview of your SCOBY's health, active batches, and daily quests
+- **🫖 Batches**: Manage all your kombucha batches with detailed tracking
+- **🎯 Quests**: Complete tutorial and challenge quests to earn rewards
+- **📚 Library**: Comprehensive kombucha knowledge base
+- **⚙️ Settings**: Customize your brewing experience
+
+### Key Components
+- **SCOBY Avatar**: Your virtual pet with dynamic health visualization
+- **Batch Cards**: Detailed batch information with progress tracking
+- **Health Ring**: Real-time SCOBY health status with trend indicators
+- **Quest Cards**: Interactive quest system with progress tracking
+- **Knowledge Modules**: Structured learning content with search functionality
+
+## 🛠️ Technology Stack
+
+### Core Framework
+- **React 18** - Modern React with hooks and functional components
+- **TypeScript** - Type-safe JavaScript for better development experience
+- **Vite** - Fast build tool and development server
+
+### UI & Styling
+- **Tailwind CSS** - Utility-first CSS framework for rapid UI development
+- **shadcn/ui** - High-quality, accessible React components
+- **Radix UI** - Unstyled, accessible UI primitives
+- **Lucide React** - Beautiful, customizable SVG icons
+- **Class Variance Authority** - Component variant management
+
+### State Management & Data
+- **React Hooks** - Built-in state management with custom hooks
+- **Local Storage** - Persistent data storage for batches and settings
+- **React Hook Form** - Performant forms with easy validation
+- **Zod** - TypeScript-first schema validation
+
+### Additional Libraries
+- **date-fns** - Modern JavaScript date utility library
+- **React Router DOM** - Client-side routing
+- **Sonner** - Toast notification system
+- **Recharts** - Composable charting library
+- **React Query** - Data fetching and caching
+
+### Development Tools
+- **ESLint** - Code linting and formatting
+- **PostCSS** - CSS processing
+- **Autoprefixer** - Automatic vendor prefixing
+
+## 🚀 Deployment
+
+This project can be deployed to any static hosting service. Here are the recommended options:
+
+### Recommended Platforms
+- **Vercel** (Recommended): Connect your GitHub repository for automatic deployments
+- **Netlify**: Drag and drop your build folder or connect via Git
+- **GitHub Pages**: Use GitHub Actions for automated builds and deployments
+- **Firebase Hosting**: Deploy using Firebase CLI with custom domain support
+
+### Build for Production
+
+```sh
+# Create production build
+npm run build
+
+# Preview production build locally
+npm run preview
 ```
 
 The built files will be in the `dist` directory, ready for deployment.
+
+### Environment Variables
+No environment variables are required for basic functionality. All data is stored locally in the browser.
+
+## 📖 Usage Guide
+
+### Getting Started
+1. **Create Your First Batch**: Start by creating a new kombucha batch with your preferred tea type
+2. **Complete Tutorial Quests**: Follow the guided tutorial to learn the basics
+3. **Monitor SCOBY Health**: Keep your virtual SCOBY healthy by maintaining active batches
+4. **Explore the Library**: Use the knowledge base to learn advanced brewing techniques
+
+### SCOBY Health System
+- Health starts at 85/100 and can reach a maximum of 100
+- Gain health by completing batches, finishing quests, and daily care
+- Lose health when batches are overdue or inactive
+- Health affects your SCOBY's appearance and mood
+
+### Quest System
+- **Tutorial Quests**: Linear progression for beginners
+- **Challenge Quests**: Ongoing challenges for experienced brewers
+- Complete quests to earn XP, health points, and unlockable titles
+
+## 🤝 Contributing
+
+We welcome contributions! Please feel free to submit issues and pull requests.
+
+### Development Setup
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## 📄 License
+
+This project is open source and available under the [MIT License](LICENSE).
+
+## 🙏 Acknowledgments
+
+- Inspired by the kombucha brewing community
+- Built with love for fermentation enthusiasts
+- Special thanks to all beta testers and contributors

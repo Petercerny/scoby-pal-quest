@@ -74,8 +74,24 @@ export const MiniPuzzle = ({ isOpen, onClose, onComplete, difficulty }: MiniPuzz
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <Card className="w-full max-w-sm bg-gradient-card shadow-warm">
+    <div 
+      className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[9999] flex items-center justify-center"
+      onClick={onClose}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 9999
+      }}
+    >
+      <Card 
+        className="w-full max-w-sm bg-gradient-card shadow-warm mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
         <CardHeader className="pb-4">
           <div className="flex items-center justify-between">
             <CardTitle className="text-lg flex items-center gap-2">

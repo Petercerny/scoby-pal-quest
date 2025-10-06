@@ -235,8 +235,27 @@ export const BatchForm = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-2 sm:p-4 z-50">
-      <Card className="w-full max-w-md max-h-[95vh] sm:max-h-[80vh] overflow-hidden flex flex-col">
+    <div 
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]"
+      onClick={(e) => {
+        console.log('Modal backdrop clicked', e.target, e.currentTarget);
+        onClose();
+      }}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        width: '100vw',
+        height: '100vh',
+        zIndex: 9999
+      }}
+    >
+      <Card 
+        className="w-full max-w-md max-h-[85vh] sm:max-h-[80vh] overflow-hidden flex flex-col mx-2 sm:mx-4"
+        onClick={(e) => e.stopPropagation()}
+      >
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 flex-shrink-0">
           <CardTitle className="text-lg truncate pr-2">{title}</CardTitle>
           <Button variant="ghost" size="sm" onClick={onClose} className="flex-shrink-0">
@@ -245,7 +264,7 @@ export const BatchForm = ({
         </CardHeader>
         
         <CardContent className="overflow-y-auto flex-1">
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Batch Name *</Label>
               <Input
@@ -280,12 +299,12 @@ export const BatchForm = ({
             </div>
 
             {/* Tea and Sugar Details Section */}
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setShowTeaSugarDetails(!showTeaSugarDetails)}
-                className="w-full justify-start"
+                className="w-full justify-start text-sm"
               >
                 <span className="flex items-center gap-2">
                   {showTeaSugarDetails ? (
@@ -298,7 +317,7 @@ export const BatchForm = ({
               </Button>
 
               {showTeaSugarDetails && (
-                <div className="space-y-4 p-4 border rounded-lg bg-muted/30">
+                <div className="space-y-3 sm:space-y-4 p-3 sm:p-4 border rounded-lg bg-muted/30">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="teaAmount">Tea Amount</Label>
@@ -363,15 +382,15 @@ export const BatchForm = ({
             </div>
 
             {/* Brewing Duration Section */}
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               <div className="flex items-center justify-between">
-                <Label className="text-base font-medium">Brewing Duration *</Label>
+                <Label className="text-sm sm:text-base font-medium">Brewing Duration *</Label>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={toggleInputMode}
-                  className="flex items-center gap-2"
+                  className="flex items-center gap-1 sm:gap-2 text-xs"
                 >
                   {formData.useDateRange ? (
                     <>
@@ -389,8 +408,8 @@ export const BatchForm = ({
 
               {formData.useDateRange ? (
                 // Date Range Mode
-                <div className="space-y-4">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="space-y-3 sm:space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="startDate">Start Date *</Label>
                       <Popover>
@@ -450,11 +469,11 @@ export const BatchForm = ({
                   </div>
                   
                   {formData.startDate && formData.endDate && (
-                    <div className="p-3 bg-muted/50 rounded-md">
-                      <p className="text-sm text-muted-foreground">
+                    <div className="p-2 sm:p-3 bg-muted/50 rounded-md">
+                      <p className="text-xs sm:text-sm text-muted-foreground">
                         <strong>{differenceInDays(formData.endDate, formData.startDate)} days</strong> of brewing
                         {formData.startDate && (
-                          <span className="block mt-1">
+                          <span className="block mt-1 text-xs">
                             From {format(formData.startDate, 'MMM d, yyyy')} to {format(formData.endDate, 'MMM d, yyyy')}
                           </span>
                         )}
@@ -486,23 +505,24 @@ export const BatchForm = ({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="notes">Notes (Optional)</Label>
+              <Label htmlFor="notes" className="text-sm">Notes (Optional)</Label>
               <Textarea
                 id="notes"
                 value={formData.notes}
                 onChange={(e) => handleInputChange('notes', e.target.value)}
                 placeholder="Any special notes about this batch..."
-                rows={3}
+                rows={2}
+                className="text-sm"
               />
             </div>
 
             {/* F2 Fermentation Section */}
-            <div className="space-y-4 pt-4 border-t">
+            <div className="space-y-3 sm:space-y-4 pt-3 sm:pt-4 border-t">
               <div className="flex items-center gap-2">
-                <h3 className="text-lg font-semibold">F2 Fermentation (Optional)</h3>
+                <h3 className="text-base sm:text-lg font-semibold">F2 Fermentation (Optional)</h3>
                 <Badge variant="secondary" className="text-xs">Secondary Fermentation</Badge>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-xs sm:text-sm text-muted-foreground">
                 Add flavorings like fruits, herbs, or syrups for a second fermentation phase.
               </p>
 
@@ -522,31 +542,33 @@ export const BatchForm = ({
               </div>
 
               {/* F2 Flavorings */}
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 <div className="flex items-center justify-between">
-                  <Label>F2 Flavorings</Label>
+                  <Label className="text-sm">F2 Flavorings</Label>
                   <Button
                     type="button"
                     variant="outline"
                     size="sm"
                     onClick={addFlavoring}
+                    className="text-xs"
                   >
-                    <Plus className="w-4 h-4 mr-1" />
-                    Add Flavoring
+                    <Plus className="w-3 h-3 sm:w-4 sm:h-4 mr-1" />
+                    Add
                   </Button>
                 </div>
 
                 {formData.f2Flavorings?.map((flavoring, index) => (
-                  <div key={flavoring.id} className="p-3 border rounded-lg space-y-3">
+                  <div key={flavoring.id} className="p-2 sm:p-3 border rounded-lg space-y-2 sm:space-y-3">
                     <div className="flex items-center justify-between">
-                      <span className="text-sm font-medium">Flavoring {index + 1}</span>
+                      <span className="text-xs sm:text-sm font-medium">Flavoring {index + 1}</span>
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
                         onClick={() => removeFlavoring(flavoring.id)}
+                        className="h-6 w-6 p-0"
                       >
-                        <Trash2 className="w-4 h-4" />
+                        <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                       </Button>
                     </div>
 
@@ -611,11 +633,11 @@ export const BatchForm = ({
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={onClose} className="flex-1 order-2 sm:order-1">
+            <div className="flex flex-col sm:flex-row gap-2 pt-1 sm:pt-2">
+              <Button type="button" variant="outline" onClick={onClose} className="flex-1 order-2 sm:order-1 text-sm">
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1 order-1 sm:order-2">
+              <Button type="submit" className="flex-1 order-1 sm:order-2 text-sm">
                 {batch ? 'Update Batch' : 'Start Brewing'}
               </Button>
             </div>

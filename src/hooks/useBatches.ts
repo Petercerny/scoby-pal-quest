@@ -94,6 +94,9 @@ export const useBatches = () => {
           createdAt: new Date(batch.createdAt),
           updatedAt: new Date(batch.updatedAt),
           previousStatus: batch.previousStatus || undefined, // Handle existing batches without this field
+          // Recalculate currentDay and f2CurrentDay when loading from storage
+          currentDay: calculateCurrentDay(new Date(batch.startDate)),
+          f2CurrentDay: batch.f2StartDate ? calculateF2CurrentDay(new Date(batch.f2StartDate)) : undefined,
         }));
         setBatches(parsedBatches);
         prevBatchesRef.current = parsedBatches;
@@ -115,7 +118,7 @@ export const useBatches = () => {
       prevBatchesRef.current = demoBatches;
     }
     isInitializedRef.current = true;
-  }, [calculateCurrentDay]);
+  }, [calculateCurrentDay, calculateF2CurrentDay]);
 
   // Save batches to localStorage only when there are meaningful changes
   useEffect(() => {
@@ -433,6 +436,17 @@ export const useBatches = () => {
     return batches.filter(batch => batch.status === status);
   }, [batches]);
 
+  // Get current day for a batch (calculated dynamically)
+  const getCurrentDay = useCallback((batch: Batch): number => {
+    return calculateCurrentDay(batch.startDate);
+  }, [calculateCurrentDay]);
+
+  // Get current F2 day for a batch (calculated dynamically)
+  const getF2CurrentDay = useCallback((batch: Batch): number | undefined => {
+    if (!batch.f2StartDate) return undefined;
+    return calculateF2CurrentDay(batch.f2StartDate);
+  }, [calculateF2CurrentDay]);
+
   return {
     batches,
     isLoading,
@@ -447,5 +461,7 @@ export const useBatches = () => {
     getActiveBatches,
     getBatchesByStatus,
     updateBatchDays,
+    getCurrentDay,
+    getF2CurrentDay,
   };
 };
