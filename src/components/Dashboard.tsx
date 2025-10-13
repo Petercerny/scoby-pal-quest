@@ -13,14 +13,13 @@ import {
   TrendingDown,
   Minus
 } from "lucide-react";
-import { HealthRing } from "./HealthRing";
 import { ScobyAvatar } from "./ScobyAvatar";
 import { MiniPuzzle } from "./MiniPuzzle";
 import { QuestCard } from "./QuestCard";
 import { BatchForm } from "./BatchForm";
+import { SmartSuggestionsPanel } from "./SmartSuggestionsPanel";
 import { useToast } from "@/hooks/use-toast";
 import { useBatches } from "@/hooks/useBatches";
-import { useScobyHealth } from "@/hooks/useScobyHealth";
 import { useQuests } from "@/hooks/useQuests";
 import { Batch, BatchFormData } from "@/types/batch";
 import { format } from "date-fns";
@@ -55,19 +54,10 @@ export const Dashboard = () => {
     createBatch, 
     getBatchStats, 
     getActiveBatches,
-    updateBatchStatus 
+    updateBatchStatus,
+    startF2Fermentation 
   } = useBatches();
   
-  const {
-    health,
-    updateHealthFromBatches,
-    addQuestHealth,
-    resetHealth,
-    getHealthStatus,
-    getHealthMood,
-    getRecentHealthEvents,
-    getHealthTrend
-  } = useScobyHealth();
 
   const { avatar, quests, completeQuest, getQuestsByFilter } = useQuests();
 
@@ -85,23 +75,6 @@ export const Dashboard = () => {
   
   const featuredBatch = getFeaturedBatch();
 
-  // Update health whenever batches change
-  useEffect(() => {
-    if (batches.length > 0) {
-      const { healthChange, events } = updateHealthFromBatches(batches);
-      
-      // Only show notification if there was an actual health change and it's significant
-      if (healthChange !== 0 && Math.abs(healthChange) >= 3) {
-        const isPositive = healthChange > 0;
-        toast({
-          title: isPositive ? "SCOBY Health Improved! 🌱" : "SCOBY Health Affected ⚠️",
-          description: isPositive 
-            ? `Your SCOBY gained ${healthChange} health points!`
-            : `Your SCOBY lost ${Math.abs(healthChange)} health points. Check your batches!`,
-        });
-      }
-    }
-  }, [batches, updateHealthFromBatches, toast]);
 
   // Calculate user level and XP based on batches
   const calculateUserStats = () => {
@@ -135,10 +108,9 @@ export const Dashboard = () => {
     // Show completion toast
     if (quest) {
       const xpReward = quest.xpReward;
-      const healthReward = quest.healthReward;
       toast({
         title: "Quest completed! 🎉",
-        description: `You earned ${xpReward} XP and ${healthReward} health points!`,
+        description: `You earned ${xpReward} XP!`,
       });
     }
   };
@@ -150,7 +122,7 @@ export const Dashboard = () => {
       completeQuest(puzzleQuest.id);
       toast({
         title: "Puzzle solved! 🧩",
-        description: `You earned ${puzzleQuest.xpReward} XP and ${puzzleQuest.healthReward} health points!`,
+        description: `You earned ${puzzleQuest.xpReward} XP!`,
       });
     }
   };
@@ -163,9 +135,6 @@ export const Dashboard = () => {
     });
   };
 
-  const getScobyMood = () => {
-    return getHealthMood();
-  };
 
   const completedQuests = quests.filter(q => q.isCompleted).length;
   const totalQuests = quests.length;
@@ -394,27 +363,6 @@ export const Dashboard = () => {
                         </div>
                       )}
                       
-                      {/* Health Impact */}
-                      <div className="text-xs text-muted-foreground border-t pt-2">
-                        <div className="flex items-center justify-center gap-1">
-                          <span>Health Impact:</span>
-                          {featuredBatch.status === 'f2_brewing' ? (
-                            (featuredBatch.f2CurrentDay || 0) >= (featuredBatch.f2TargetDays || 1) ? (
-                              <span className="text-scoby-healthy">+8 points when F2 bottled</span>
-                            ) : (featuredBatch.f2CurrentDay || 0) > (featuredBatch.f2TargetDays || 1) + 1 ? (
-                              <span className="text-scoby-danger">-3 points (F2 overdue)</span>
-                            ) : (
-                              <span className="text-primary">+2 points daily F2 care</span>
-                            )
-                          ) : featuredBatch.currentDay >= featuredBatch.targetDays ? (
-                            <span className="text-scoby-healthy">+5 points when bottled</span>
-                          ) : featuredBatch.currentDay > featuredBatch.targetDays + 2 ? (
-                            <span className="text-scoby-danger">-5 points (overdue)</span>
-                          ) : (
-                            <span className="text-primary">+1 point daily care</span>
-                          )}
-                        </div>
-                      </div>
                     </div>
                   </>
                 ) : (
@@ -433,7 +381,7 @@ export const Dashboard = () => {
               </CardContent>
             </Card>
 
-            {/* SCOBY Avatar & Health */}
+            {/* SCOBY Avatar */}
             <Card>
               <CardContent className="p-6">
                 <div className="flex flex-col items-center text-center">
@@ -443,87 +391,27 @@ export const Dashboard = () => {
                     showStats={true}
                   />
                   <p className="text-sm text-muted-foreground mt-3">
-                    Your SCOBY companion is {getHealthStatus().toLowerCase()}
+                    Your SCOBY companion is ready to help you brew!
                   </p>
-                </div>
-                
-                {/* Health Status */}
-                <div className="mt-4 space-y-3 text-center">
-                  <div className="flex items-center justify-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-primary"></div>
-                    <span className="text-sm font-medium">
-                      {health.currentHealth}/{health.maxHealth} Health
-                    </span>
-                  </div>
                   
-                  {/* Health Trend */}
-                  <div className="flex items-center justify-center gap-2 text-xs">
-                    {getHealthTrend() === 'improving' && (
-                      <>
-                        <TrendingUpIcon className="w-4 h-4 text-scoby-healthy" />
-                        <span className="text-scoby-healthy">Improving</span>
-                      </>
-                    )}
-                    {getHealthTrend() === 'declining' && (
-                      <>
-                        <TrendingDown className="w-4 h-4 text-scoby-danger" />
-                        <span className="text-scoby-danger">Needs Attention</span>
-                      </>
-                    )}
-                    {getHealthTrend() === 'stable' && (
-                      <>
-                        <Minus className="w-4 h-4 text-muted-foreground" />
-                        <span className="text-muted-foreground">Stable</span>
-                      </>
-                    )}
-                  </div>
-                  
-                  {/* Health Tips */}
-                  <div className="text-xs p-2 bg-muted/30 rounded">
-                    {health.currentHealth >= 80 && (
-                      <span className="text-scoby-healthy">Keep up the great work! Your SCOBY is thriving.</span>
-                    )}
-                    {health.currentHealth >= 60 && health.currentHealth < 80 && (
-                      <span className="text-primary">Complete quests and tend to batches to improve health.</span>
-                    )}
-                    {health.currentHealth >= 40 && health.currentHealth < 60 && (
-                      <span className="text-scoby-warning">Your SCOBY needs attention. Check for overdue batches.</span>
-                    )}
-                    {health.currentHealth < 40 && (
-                      <span className="text-scoby-danger">Critical health! Complete quests and fix batch issues immediately.</span>
-                    )}
-                  </div>
-                  
-                  {/* Recent Health Events */}
-                  {getRecentHealthEvents().length > 0 && (
-                    <div className="space-y-1 max-h-16 overflow-y-auto">
-                      {getRecentHealthEvents().slice(0, 2).map((event) => (
-                        <div key={event.id} className="flex items-center justify-between text-xs p-1 bg-muted/30 rounded">
-                          <span className="truncate flex-1 text-left">{event.description}</span>
-                          <span className={`font-medium ml-2 ${
-                            event.value > 0 ? 'text-scoby-healthy' : 'text-scoby-danger'
-                          }`}>
-                            {event.value > 0 ? '+' : ''}{event.value}
-                          </span>
-                        </div>
+                  {/* Activity Streak Visual */}
+                  <div className="mt-3 flex items-center justify-center gap-2">
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: 7 }, (_, i) => (
+                        <div
+                          key={i}
+                          className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                            avatar.streakDays > i
+                              ? 'bg-green-500 shadow-sm'
+                              : 'bg-muted'
+                          }`}
+                        />
                       ))}
                     </div>
-                  )}
-                  
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => {
-                      resetHealth();
-                      toast({
-                        title: "Health Reset",
-                        description: "SCOBY health has been reset to initial value",
-                      });
-                    }}
-                    className="text-xs"
-                  >
-                    Reset Health
-                  </Button>
+                    <div className="text-xs text-muted-foreground">
+                      {avatar.streakDays > 0 ? `${avatar.streakDays} day streak` : 'Start your streak!'}
+                    </div>
+                  </div>
                 </div>
               </CardContent>
             </Card>
@@ -599,6 +487,14 @@ export const Dashboard = () => {
                 </div>
               </CardContent>
             </Card>
+
+            {/* Smart Suggestions Panel */}
+            <SmartSuggestionsPanel
+              batches={batches}
+              onUpdateBatchStatus={updateBatchStatus}
+              onStartF2Fermentation={startF2Fermentation}
+              onCreateBatch={() => setShowNewBatchForm(true)}
+            />
 
             {/* Active Batches */}
             {activeBatches.length > 0 && (
@@ -693,7 +589,7 @@ export const Dashboard = () => {
             )}
 
             {/* Stats Row */}
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               <Card className="text-center">
                 <CardContent className="p-4">
                   <div className="text-2xl font-bold text-primary">{stats.totalBatches}</div>
@@ -718,20 +614,6 @@ export const Dashboard = () => {
                 <CardContent className="p-4">
                   <div className="text-2xl font-bold text-secondary-accent">{avatar.level}</div>
                   <div className="text-xs text-muted-foreground">SCOBY Level</div>
-                </CardContent>
-              </Card>
-              
-              <Card className="text-center">
-                <CardContent className="p-4">
-                  <div className={`text-2xl font-bold ${
-                    avatar.health >= 80 ? 'text-scoby-healthy' :
-                    avatar.health >= 60 ? 'text-primary' :
-                    avatar.health >= 40 ? 'text-scoby-warning' :
-                    'text-scoby-danger'
-                  }`}>
-                    {avatar.health}%
-                  </div>
-                  <div className="text-xs text-muted-foreground">SCOBY Health</div>
                 </CardContent>
               </Card>
             </div>

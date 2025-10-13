@@ -22,21 +22,18 @@ import {
   Shield,
   Info
 } from 'lucide-react';
-import { useScobyHealth } from '@/hooks/useScobyHealth';
 import { useBatches } from '@/hooks/useBatches';
 import { useSettings } from '@/hooks/useSettings';
 import { toast } from '@/hooks/use-toast';
 
 export const Settings = () => {
   const { settings, updateSetting, resetSettings } = useSettings();
-  const { resetHealth } = useScobyHealth();
   const { batches, deleteBatch } = useBatches();
 
   const exportData = () => {
     const data = {
       settings,
       batches: localStorage.getItem('scoby-batches'),
-      health: localStorage.getItem('scoby-health'),
       exportDate: new Date().toISOString(),
     };
     
@@ -76,9 +73,6 @@ export const Settings = () => {
         if (data.batches) {
           localStorage.setItem('scoby-batches', data.batches);
         }
-        if (data.health) {
-          localStorage.setItem('scoby-health', data.health);
-        }
         
         toast({
           title: "Data imported successfully",
@@ -99,8 +93,6 @@ export const Settings = () => {
   };
 
   const resetAllData = () => {
-    // Reset health
-    resetHealth();
     
     // Clear batches
     batches.forEach(batch => deleteBatch(batch.id));
@@ -110,7 +102,6 @@ export const Settings = () => {
     
     // Clear localStorage
     localStorage.removeItem('scoby-batches');
-    localStorage.removeItem('scoby-health');
     localStorage.removeItem('scoby-settings');
     
     toast({
@@ -126,7 +117,6 @@ export const Settings = () => {
     const backupData = {
       settings,
       batches: localStorage.getItem('scoby-batches'),
-      health: localStorage.getItem('scoby-health'),
       backupDate: new Date().toISOString(),
     };
     
@@ -157,7 +147,7 @@ export const Settings = () => {
               Notifications
             </CardTitle>
             <CardDescription>
-              Manage your batch reminders and health alerts
+              Manage your batch reminders and notifications
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -177,21 +167,6 @@ export const Settings = () => {
               />
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="health-alerts">Health Alerts</Label>
-                <p className="text-sm text-muted-foreground">
-                  Get notified when SCOBY health is low
-                </p>
-              </div>
-              <Switch
-                id="health-alerts"
-                checked={settings.notifications.healthAlerts}
-                onCheckedChange={(checked) => 
-                  updateSetting('notifications', 'healthAlerts', checked)
-                }
-              />
-            </div>
 
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
@@ -471,7 +446,7 @@ export const Settings = () => {
                 <AlertDialogHeader>
                   <AlertDialogTitle>Reset All Data</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This will permanently delete all your batches, health data, and settings. 
+                    This will permanently delete all your batches and settings. 
                     This action cannot be undone. Make sure you have exported your data first.
                   </AlertDialogDescription>
                 </AlertDialogHeader>

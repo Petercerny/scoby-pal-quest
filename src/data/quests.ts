@@ -9,7 +9,6 @@ export const TUTORIAL_QUESTS: Quest[] = [
     type: 'tutorial',
     category: 'brewing',
     xpReward: 50,
-    healthReward: 10,
     requirements: [
       {
         id: 'welcome',
@@ -51,7 +50,6 @@ export const TUTORIAL_QUESTS: Quest[] = [
     type: 'tutorial',
     category: 'brewing',
     xpReward: 100,
-    healthReward: 20,
     requirements: [
       {
         id: 'create-batch',
@@ -93,7 +91,6 @@ export const TUTORIAL_QUESTS: Quest[] = [
     type: 'tutorial',
     category: 'brewing',
     xpReward: 75,
-    healthReward: 15,
     requirements: [
       {
         id: 'taste-batch',
@@ -135,7 +132,6 @@ export const TUTORIAL_QUESTS: Quest[] = [
     type: 'tutorial',
     category: 'fermentation',
     xpReward: 125,
-    healthReward: 25,
     requirements: [
       {
         id: 'f2-batch',
@@ -181,7 +177,6 @@ export const CHALLENGE_QUESTS: Quest[] = [
     type: 'challenge',
     category: 'flavoring',
     xpReward: 200,
-    healthReward: 30,
     requirements: [
       {
         id: 'five-flavors',
@@ -229,7 +224,6 @@ export const CHALLENGE_QUESTS: Quest[] = [
     type: 'challenge',
     category: 'fermentation',
     xpReward: 300,
-    healthReward: 40,
     requirements: [
       {
         id: 'perfect-carbonation',
@@ -277,7 +271,6 @@ export const CHALLENGE_QUESTS: Quest[] = [
     type: 'challenge',
     category: 'brewing',
     xpReward: 500,
-    healthReward: 50,
     requirements: [
       {
         id: 'monthly-streak',
@@ -325,7 +318,6 @@ export const CHALLENGE_QUESTS: Quest[] = [
     type: 'challenge',
     category: 'experimentation',
     xpReward: 150,
-    healthReward: 25,
     requirements: [
       {
         id: 'three-teas',
@@ -360,19 +352,18 @@ export const CHALLENGE_QUESTS: Quest[] = [
     tags: ['challenge', 'experimentation', 'tea']
   },
   {
-    id: 'health-monitor',
-    title: 'Health Monitor',
-    description: 'Keep your SCOBY healthy for 30 consecutive days.',
+    id: 'activity-monitor',
+    title: 'Activity Monitor',
+    description: 'Maintain daily brewing activity for 30 consecutive days.',
     type: 'challenge',
     category: 'health',
     xpReward: 250,
-    healthReward: 35,
     requirements: [
       {
-        id: 'healthy-streak',
+        id: 'activity-streak',
         type: 'streak_days',
         value: 30,
-        description: 'Maintain high health for 30 days',
+        description: 'Maintain daily activity for 30 days',
         currentProgress: 0,
         targetProgress: 30
       }
@@ -383,13 +374,6 @@ export const CHALLENGE_QUESTS: Quest[] = [
         type: 'xp',
         value: 250,
         description: '250 XP',
-        unlocked: false
-      },
-      {
-        id: 'health-health',
-        type: 'health',
-        value: 35,
-        description: '35 Health',
         unlocked: false
       },
       {
@@ -414,7 +398,6 @@ export const CHALLENGE_QUESTS: Quest[] = [
     type: 'challenge',
     category: 'seasonal',
     xpReward: 400,
-    healthReward: 45,
     requirements: [
       {
         id: 'four-seasons',

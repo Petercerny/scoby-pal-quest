@@ -69,10 +69,6 @@ export const QuestsPage: React.FC = () => {
               <Star className="w-3 h-3" />
               {quest.xpReward} XP
             </div>
-            <div className="flex items-center gap-1 text-xs text-muted-foreground">
-              <Zap className="w-3 h-3" />
-              {quest.healthReward} Health
-            </div>
           </div>
         </div>
       </CardHeader>
