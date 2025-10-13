@@ -6,15 +6,13 @@ import { useBatches } from './useBatches';
 const INITIAL_AVATAR: ScobyAvatar = {
   level: 1,
   xp: 0,
-  health: 100,
-  maxHealth: 100,
   xpToNextLevel: 100,
   evolutionStage: 'baby',
   cosmeticUnlocks: [],
-  mood: 'happy',
+  mood: 'neutral',
   lastInteraction: new Date(),
   streakDays: 0
-};
+} as ScobyAvatar;
 
 export const useQuests = () => {
   const [quests, setQuests] = useState<Quest[]>([]);
@@ -39,28 +37,11 @@ export const useQuests = () => {
     return 'elder';
   }, []);
 
-  // Calculate health based on recent activity
-  const calculateHealth = useCallback((lastInteraction: Date, streakDays: number): number => {
-    const daysSinceInteraction = Math.floor((Date.now() - lastInteraction.getTime()) / (1000 * 60 * 60 * 24));
-    
-    let health = 100;
-    
-    // Reduce health based on days since last interaction
-    health -= daysSinceInteraction * 5;
-    
-    // Add health bonus for streak
-    health += Math.min(streakDays * 2, 20);
-    
-    // Ensure health stays within bounds
-    return Math.max(0, Math.min(100, health));
-  }, []);
-
-  // Calculate mood based on health
-  const calculateMood = useCallback((health: number): 'happy' | 'neutral' | 'sad' | 'critical' => {
-    if (health >= 80) return 'happy';
-    if (health >= 50) return 'neutral';
-    if (health >= 20) return 'sad';
-    return 'critical';
+  // Calculate mood based on activity
+  const calculateMood = useCallback((streakDays: number): 'happy' | 'neutral' | 'sad' => {
+    if (streakDays >= 7) return 'happy';
+    if (streakDays >= 1) return 'neutral';
+    return 'neutral'; // Start on neutral instead of sad
   }, []);
 
   // Load quest data from localStorage
@@ -126,21 +107,19 @@ export const useQuests = () => {
     }
   }, [quests, avatar, questProgress]);
 
-  // Update avatar health and mood based on activity
+  // Update avatar mood based on activity
   useEffect(() => {
     if (!isInitializedRef.current) return;
     
-    const newHealth = calculateHealth(avatar.lastInteraction, avatar.streakDays);
-    const newMood = calculateMood(newHealth);
+    const newMood = calculateMood(avatar.streakDays);
     
-    if (newHealth !== avatar.health || newMood !== avatar.mood) {
+    if (newMood !== avatar.mood) {
       setAvatar(prev => ({
         ...prev,
-        health: newHealth,
         mood: newMood
       }));
     }
-  }, [avatar.lastInteraction, avatar.streakDays, calculateHealth, calculateMood, avatar.health, avatar.mood]);
+  }, [avatar.streakDays, calculateMood, avatar.mood]);
 
   // Check quest progress based on batch data
   useEffect(() => {
@@ -252,9 +231,8 @@ export const useQuests = () => {
     const quest = quests.find(q => q.id === questId);
     if (!quest || quest.isCompleted) return;
     
-    // Award XP and health
+    // Award XP
     const newXP = avatar.xp + quest.xpReward;
-    const newHealth = Math.min(avatar.maxHealth, avatar.health + quest.healthReward);
     
     // Calculate new level
     let newLevel = avatar.level;
@@ -290,12 +268,11 @@ export const useQuests = () => {
       ...prev,
       level: newLevel,
       xp: remainingXP,
-      health: newHealth,
       xpToNextLevel,
       evolutionStage: newEvolutionStage,
       cosmeticUnlocks: newCosmeticUnlocks,
       lastInteraction: new Date(),
-      mood: calculateMood(newHealth)
+      mood: calculateMood(prev.streakDays)
     }));
     
     // Mark quest as completed
@@ -335,9 +312,6 @@ export const useQuests = () => {
       .filter(q => q.isCompleted)
       .reduce((sum, q) => sum + q.xpReward, 0);
     
-    const totalHealthEarned = quests
-      .filter(q => q.isCompleted)
-      .reduce((sum, q) => sum + q.healthReward, 0);
     
     const favoriteCategory = quests
       .filter(q => q.isCompleted)
@@ -355,11 +329,10 @@ export const useQuests = () => {
       tutorialProgress: tutorialQuests.length > 0 ? (completedTutorialQuests / tutorialQuests.length) * 100 : 0,
       challengesCompleted: completedChallengeQuests,
       totalXPEarned,
-      totalHealthEarned,
       currentStreak: avatar.streakDays,
       longestStreak: avatar.streakDays, // This would need to be tracked separately
       favoriteCategory: mostCompletedCategory
-    };
+    } as QuestStats;
   }, [quests, avatar]);
 
   // Get quests by filter

@@ -5,55 +5,12 @@ import { Batch, BatchFormData, BatchStats, F2Flavoring } from '@/types/batch';
 // Sample demo batches for testing
 const DEMO_BATCHES: Omit<Batch, 'id' | 'currentDay' | 'createdAt' | 'updatedAt'>[] = [
   {
-    name: 'Summer Black Tea',
-    startDate: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000), // 3 days ago
-    status: 'brewing',
-    teaType: 'Black Tea',
-    notes: 'Using organic black tea leaves with a hint of bergamot',
-    targetDays: 7,
-    isActive: true,
-  },
-  {
-    name: 'Green Tea Experiment',
-    startDate: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000), // 1 day ago
-    status: 'brewing',
-    teaType: 'Green Tea',
-    notes: 'First time trying green tea kombucha',
-    targetDays: 10,
-    isActive: true,
-  },
-  {
-    name: 'Classic Black Batch',
-    startDate: new Date(Date.now() - 8 * 24 * 60 * 60 * 1000), // 8 days ago
-    status: 'ready',
-    teaType: 'Black Tea',
-    notes: 'Perfect balance of sweet and tart',
-    targetDays: 7,
-    isActive: true,
-  },
-  {
-    name: 'Strawberry Ginger Fizz',
-    startDate: new Date(Date.now() - 12 * 24 * 60 * 60 * 1000), // 12 days ago
-    status: 'f2_brewing',
-    teaType: 'Black Tea',
-    notes: 'F1 completed, now adding strawberry and ginger for F2',
-    targetDays: 7,
-    f2StartDate: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000), // 2 days ago
-    f2TargetDays: 3,
-    f2CurrentDay: 2,
-    f2Flavorings: [
-      { id: '1', name: 'Fresh Strawberries', type: 'fruit', amount: '1 cup', notes: 'Diced' },
-      { id: '2', name: 'Fresh Ginger', type: 'spice', amount: '2 tbsp', notes: 'Grated' }
-    ],
-    isActive: true,
-  },
-  {
-    name: 'Future Oolong Batch',
-    startDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), // 3 days from now
+    name: 'Black TeaBatch',
+    startDate: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000), // 1 day from now (tomorrow)
     status: 'planned',
-    teaType: 'Oolong Tea',
-    notes: 'Planning to start this weekend',
-    targetDays: 8,
+    teaType: 'Black Tea',
+    notes: 'Planning to start tomorrow',
+    targetDays: 7,
     isActive: true,
   },
 ];

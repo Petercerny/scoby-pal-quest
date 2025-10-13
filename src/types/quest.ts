@@ -5,7 +5,6 @@ export interface Quest {
   type: 'tutorial' | 'challenge';
   category: string;
   xpReward: number;
-  healthReward: number;
   requirements: QuestRequirement[];
   rewards: QuestReward[];
   isCompleted: boolean;
@@ -29,7 +28,7 @@ export interface QuestRequirement {
 
 export interface QuestReward {
   id: string;
-  type: 'xp' | 'health' | 'cosmetic' | 'title' | 'achievement';
+  type: 'xp' | 'cosmetic' | 'title' | 'achievement';
   value: number | string;
   description: string;
   unlocked: boolean;
@@ -38,14 +37,12 @@ export interface QuestReward {
 export interface ScobyAvatar {
   level: number;
   xp: number;
-  health: number;
-  maxHealth: number;
   xpToNextLevel: number;
   evolutionStage: 'baby' | 'growing' | 'mature' | 'elder';
   cosmeticUnlocks: CosmeticUnlock[];
   currentSkin?: string;
   aura?: string;
-  mood: 'happy' | 'neutral' | 'sad' | 'critical';
+  mood: 'happy' | 'neutral' | 'sad';
   lastInteraction: Date;
   streakDays: number;
 }
@@ -72,7 +69,6 @@ export interface QuestStats {
   tutorialProgress: number;
   challengesCompleted: number;
   totalXPEarned: number;
-  totalHealthEarned: number;
   currentStreak: number;
   longestStreak: number;
   favoriteCategory: string;

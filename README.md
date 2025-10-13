@@ -5,8 +5,8 @@ A delightful gamified fermentation companion app that helps you track your kombu
 ## ✨ Features
 
 ### 🎮 Gamified Experience
-- **Virtual SCOBY Pet**: Care for your digital SCOBY companion with a dynamic health system
-- **Quest System**: Complete tutorial and challenge quests to earn XP and health rewards
+- **Virtual SCOBY Pet**: Care for your digital SCOBY companion
+- **Quest System**: Complete tutorial and challenge quests to earn XP
 - **Leveling System**: Progress through brewing levels based on your fermentation experience
 - **Achievements**: Unlock titles and rewards as you master kombucha brewing
 
@@ -17,11 +17,6 @@ A delightful gamified fermentation companion app that helps you track your kombu
 - **Batch Statistics**: View comprehensive stats on your brewing history
 - **Pin System**: Pin important batches for quick access
 
-### 🏥 SCOBY Health System
-- **Dynamic Health**: SCOBY health changes based on your brewing activities
-- **Health Rewards**: Gain health points for successful batches and quest completion
-- **Health Warnings**: Get alerts when batches are overdue or need attention
-- **Visual Feedback**: Health ring with color-coded status and trend indicators
 
 ### 📚 Knowledge Library
 - **Comprehensive Guide**: Learn everything about kombucha brewing
@@ -38,7 +33,7 @@ A delightful gamified fermentation companion app that helps you track your kombu
 ### 📱 Modern Interface
 - **Mobile-First Design**: Optimized for mobile devices with responsive layout
 - **Intuitive Navigation**: Bottom navigation with 5 main sections
-- **Real-time Updates**: Live progress tracking and health monitoring
+- **Real-time Updates**: Live progress tracking
 - **Toast Notifications**: Helpful feedback for all actions
 
 ## 🚀 Getting Started
@@ -159,19 +154,14 @@ No environment variables are required for basic functionality. All data is store
 ### Getting Started
 1. **Create Your First Batch**: Start by creating a new kombucha batch with your preferred tea type
 2. **Complete Tutorial Quests**: Follow the guided tutorial to learn the basics
-3. **Monitor SCOBY Health**: Keep your virtual SCOBY healthy by maintaining active batches
+3. **Engage with the App**: Interact daily to maintain your SCOBY's mood and streak
 4. **Explore the Library**: Use the knowledge base to learn advanced brewing techniques
 
-### SCOBY Health System
-- Health starts at 85/100 and can reach a maximum of 100
-- Gain health by completing batches, finishing quests, and daily care
-- Lose health when batches are overdue or inactive
-- Health affects your SCOBY's appearance and mood
 
 ### Quest System
 - **Tutorial Quests**: Linear progression for beginners
 - **Challenge Quests**: Ongoing challenges for experienced brewers
-- Complete quests to earn XP, health points, and unlockable titles
+- Complete quests to earn XP and unlockable titles
 
 ## 🤝 Contributing
 
