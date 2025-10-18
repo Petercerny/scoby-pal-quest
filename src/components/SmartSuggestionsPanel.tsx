@@ -18,6 +18,7 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { F2StartForm } from "./F2StartForm";
 
 interface SmartSuggestion {
   id: string;
@@ -38,64 +39,6 @@ interface SmartSuggestionsPanelProps {
   onCreateBatch: () => void;
 }
 
-// Simple F2 Start Dialog Component
-const F2StartDialog = ({ 
-  batch, 
-  onStartF2, 
-  children 
-}: { 
-  batch: Batch; 
-  onStartF2: (f2TargetDays: number, f2Flavorings: any[]) => void;
-  children: React.ReactNode;
-}) => {
-  const [f2TargetDays, setF2TargetDays] = useState(3);
-  const [isOpen, setIsOpen] = useState(false);
-
-  const handleStartF2 = () => {
-    onStartF2(f2TargetDays, []); // Start with empty flavorings for now
-    setIsOpen(false);
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        {children}
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Start F2 Fermentation</DialogTitle>
-        </DialogHeader>
-        <div className="space-y-4">
-          <div className="text-sm text-muted-foreground">
-            Starting F2 fermentation for <strong>{batch.name}</strong>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="f2-days">F2 Target Days</Label>
-            <Input
-              id="f2-days"
-              type="number"
-              min="1"
-              max="14"
-              value={f2TargetDays}
-              onChange={(e) => setF2TargetDays(parseInt(e.target.value) || 3)}
-            />
-            <div className="text-xs text-muted-foreground">
-              Typical F2 fermentation takes 2-7 days
-            </div>
-          </div>
-          <div className="flex gap-2 justify-end">
-            <Button variant="outline" onClick={() => setIsOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleStartF2}>
-              Start F2
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  );
-};
 
 export const SmartSuggestionsPanel = ({ 
   batches, 
@@ -103,6 +46,8 @@ export const SmartSuggestionsPanel = ({
   onStartF2Fermentation,
   onCreateBatch 
 }: SmartSuggestionsPanelProps) => {
+  const [showF2Form, setShowF2Form] = useState(false);
+  const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
   
   // Generate smart suggestions based on batch states
   const generateSuggestions = (): SmartSuggestion[] => {
@@ -160,7 +105,7 @@ export const SmartSuggestionsPanel = ({
         id: `start-f2-${batch.id}`,
         title: "Start F2 Fermentation",
         description: `${batch.name} is ready for second fermentation`,
-        action: "Add Flavorings",
+        action: "Start F2",
         icon: <Droplets className="w-4 h-4" />,
         priority: 'medium',
         batchId: batch.id,
@@ -260,6 +205,7 @@ export const SmartSuggestionsPanel = ({
   }
   
   return (
+    <>
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-lg">
@@ -304,24 +250,23 @@ export const SmartSuggestionsPanel = ({
               </div>
               <div className="flex justify-end sm:justify-start">
                 {isF2Suggestion && batch ? (
-                  <F2StartDialog 
-                    batch={batch}
-                    onStartF2={(f2TargetDays, f2Flavorings) => onStartF2Fermentation(batch.id, f2TargetDays, f2Flavorings)}
+                  <Button 
+                    size="sm" 
+                    onClick={() => {
+                      setSelectedBatch(batch);
+                      setShowF2Form(true);
+                    }}
+                    className="text-xs h-8 px-2 sm:px-3 w-full sm:w-auto"
                   >
-                    <Button 
-                      size="sm" 
-                      className="text-xs h-8 px-2 sm:px-3 w-full sm:w-auto"
-                    >
-                      <span className="hidden sm:inline">{suggestion.action}</span>
-                      <span className="sm:hidden">
-                        {suggestion.action.length > 12 
-                          ? suggestion.action.split(' ')[0] 
-                          : suggestion.action
-                        }
-                      </span>
-                      <ArrowRight className="w-3 h-3 ml-1" />
-                    </Button>
-                  </F2StartDialog>
+                    <span className="hidden sm:inline">{suggestion.action}</span>
+                    <span className="sm:hidden">
+                      {suggestion.action.length > 12 
+                        ? suggestion.action.split(' ')[0] 
+                        : suggestion.action
+                      }
+                    </span>
+                    <ArrowRight className="w-3 h-3 ml-1" />
+                  </Button>
                 ) : (
                   <Button 
                     size="sm" 
@@ -350,5 +295,23 @@ export const SmartSuggestionsPanel = ({
         )}
       </CardContent>
     </Card>
+    
+    {/* F2 Start Form Modal */}
+    {selectedBatch && (
+      <F2StartForm
+        isOpen={showF2Form}
+        onClose={() => {
+          setShowF2Form(false);
+          setSelectedBatch(null);
+        }}
+        onSubmit={(f2TargetDays, f2Flavorings) => {
+          onStartF2Fermentation(selectedBatch.id, f2TargetDays, f2Flavorings);
+          setShowF2Form(false);
+          setSelectedBatch(null);
+        }}
+        batch={selectedBatch}
+      />
+    )}
+    </>
   );
 };
