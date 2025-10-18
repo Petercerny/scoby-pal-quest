@@ -89,10 +89,10 @@ export const F2StartForm = ({
       }}
     >
       <Card 
-        className="w-full max-w-2xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col mx-2 sm:mx-4"
+        className="w-full max-w-2xl max-h-[90vh] sm:max-h-[85vh] overflow-hidden flex flex-col mx-2 sm:mx-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 flex-shrink-0">
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 sm:pb-4 flex-shrink-0">
           <div className="flex items-center gap-2 min-w-0">
             <FlaskConical className="w-5 h-5 text-purple-600 flex-shrink-0" />
             <CardTitle className="text-lg truncate">Start F2 Fermentation</CardTitle>
@@ -103,14 +103,14 @@ export const F2StartForm = ({
         </CardHeader>
         
         <CardContent className="overflow-y-auto flex-1">
-          <div className="mb-4 p-3 bg-muted/50 rounded-lg">
+          <div className="mb-3 sm:mb-4 p-2 sm:p-3 bg-muted/50 rounded-lg">
             <div className="text-sm font-medium truncate">{batch.name}</div>
             <div className="text-xs text-muted-foreground">
-              F1 Complete - Ready for secondary fermentation
+              F1 Complete - Ready for F2
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div className="space-y-2">
               <Label htmlFor="f2TargetDays">F2 Target Days *</Label>
               <Input
@@ -123,36 +123,38 @@ export const F2StartForm = ({
                 required
               />
               <p className="text-xs text-muted-foreground">
-                Typical F2 fermentation is 2-7 days. Shorter for carbonation, longer for flavor development.
+                Typical F2 fermentation is 2-7 days.
               </p>
             </div>
 
             {/* F2 Flavorings */}
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               <div className="flex items-center justify-between">
-                <Label>F2 Flavorings</Label>
+                <Label className="text-sm">F2 Flavorings</Label>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={addFlavoring}
+                  className="text-xs h-7 px-2"
                 >
-                  <Plus className="w-4 h-4 mr-1" />
-                  Add Flavoring
+                  <Plus className="w-3 h-3 mr-1" />
+                  Add
                 </Button>
               </div>
 
               {f2Flavorings.map((flavoring, index) => (
-                <div key={flavoring.id} className="p-3 border rounded-lg space-y-3">
+                <div key={flavoring.id} className="p-2 sm:p-3 border rounded-lg space-y-2 sm:space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Flavoring {index + 1}</span>
+                    <span className="text-xs sm:text-sm font-medium">Flavoring {index + 1}</span>
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onClick={() => removeFlavoring(flavoring.id)}
+                      className="h-6 w-6 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <Trash2 className="w-3 h-3" />
                     </Button>
                   </div>
 
@@ -160,10 +162,10 @@ export const F2StartForm = ({
                     <div className="space-y-1">
                       <Label className="text-xs">Name</Label>
                       <Input
-                        placeholder="e.g., Fresh Strawberries"
+                        placeholder="e.g., Strawberries"
                         value={flavoring.name}
                         onChange={(e) => updateFlavoring(flavoring.id, 'name', e.target.value)}
-                        className="min-w-0"
+                        className="min-w-0 text-sm"
                       />
                     </div>
                     <div className="space-y-1">
@@ -172,7 +174,7 @@ export const F2StartForm = ({
                         value={flavoring.type}
                         onValueChange={(value) => updateFlavoring(flavoring.id, 'type', value)}
                       >
-                        <SelectTrigger className="min-w-0">
+                        <SelectTrigger className="min-w-0 text-sm">
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
@@ -190,19 +192,19 @@ export const F2StartForm = ({
                     <div className="space-y-1">
                       <Label className="text-xs">Amount</Label>
                       <Input
-                        placeholder="e.g., 1 cup, 2 tbsp"
+                        placeholder="e.g., 1 cup"
                         value={flavoring.amount}
                         onChange={(e) => updateFlavoring(flavoring.id, 'amount', e.target.value)}
-                        className="min-w-0"
+                        className="min-w-0 text-sm"
                       />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-xs">Notes (Optional)</Label>
                       <Input
-                        placeholder="e.g., Diced, Grated"
+                        placeholder="e.g., Diced"
                         value={flavoring.notes || ''}
                         onChange={(e) => updateFlavoring(flavoring.id, 'notes', e.target.value)}
-                        className="min-w-0"
+                        className="min-w-0 text-sm"
                       />
                     </div>
                   </div>
@@ -210,19 +212,19 @@ export const F2StartForm = ({
               ))}
 
               {f2Flavorings.length === 0 && (
-                <div className="text-center py-4 text-muted-foreground text-sm">
-                  No flavorings added yet. You can add fruits, herbs, syrups, or other flavorings.
+                <div className="text-center py-2 sm:py-4 text-muted-foreground text-xs sm:text-sm">
+                  No flavorings added yet. Add fruits, herbs, syrups, or other flavorings.
                 </div>
               )}
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={onClose} className="flex-1 order-2 sm:order-1">
+            <div className="flex flex-col sm:flex-row gap-2 pt-1 sm:pt-2">
+              <Button type="button" variant="outline" onClick={onClose} className="flex-1 order-2 sm:order-1 h-9 sm:h-10">
                 Cancel
               </Button>
-              <Button type="submit" className="flex-1 order-1 sm:order-2">
-                <FlaskConical className="w-4 h-4 mr-2 flex-shrink-0" />
-                <span className="truncate">Start F2 Fermentation</span>
+              <Button type="submit" className="flex-1 order-1 sm:order-2 h-9 sm:h-10">
+                <FlaskConical className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 flex-shrink-0" />
+                <span className="truncate text-sm sm:text-base">Start F2 Fermentation</span>
               </Button>
             </div>
           </form>
